@@ -1,4 +1,0 @@
-interface:
-  display_name: "PR Review"
-  short_description: "Review a PR with a parallel panel, merge-risk band, focused inspection list, and optional PR comment"
-  default_prompt: "Review the requested change with the parallel panel, enforce the high-reasoning model policy, report merge risk and inspection areas, and publish a PR comment only when explicitly authorized."
