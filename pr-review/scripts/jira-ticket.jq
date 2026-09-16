@@ -1,19 +1,43 @@
 def escape_markdown_text:
   gsub("\\\\"; "\\\\")
-  | gsub("(?<syntax>[`*_{}\\[\\]()#+.!|>-])"; "\\\(.syntax)");
+  | gsub("(?<syntax>[`*_{}\\[\\]()#+.!>-])"; "\\\(.syntax)");
+
+def markdown_link_destination:
+  gsub("\\\\"; "%5C")
+  | gsub("<"; "%3C")
+  | gsub(">"; "%3E")
+  | gsub("\\r"; "%0D")
+  | gsub("\\n"; "%0A");
+
+def backtick_delimiter($text; $minimum):
+  "`" * ([$minimum, ($text | scan("`+") | length + 1)] | max);
+
+def inline_code($text):
+  backtick_delimiter($text; 1) as $delimiter
+  | (if (($text | test("^ *$")) | not)
+        and (($text | startswith(" ")) or ($text | endswith(" "))
+          or ($text | startswith("`")) or ($text | endswith("`"))) then
+      " " + $text + " "
+    else
+      $text
+    end) as $body
+  | $delimiter + $body + $delimiter;
+
+def markdown_link($label; $url):
+  "[" + $label + "](<" + ($url | markdown_link_destination) + ">)";
 
 def apply_marks($text; $marks):
   ($marks // []) as $all_marks
   | (if any($all_marks[]; .type == "code") then $text else ($text | escape_markdown_text) end) as $initial
   | reduce $all_marks[] as $mark ($initial;
     if $mark.type == "link" and ($mark.attrs.href // "") != "" then
-      "[" + . + "](" + $mark.attrs.href + ")"
+      markdown_link(.; $mark.attrs.href)
     elif $mark.type == "strong" then
       "**" + . + "**"
     elif $mark.type == "em" then
       "*" + . + "*"
     elif $mark.type == "code" then
-      "`" + . + "`"
+      inline_code(.)
     elif $mark.type == "strike" then
       "~~" + . + "~~"
     else
@@ -39,7 +63,7 @@ def raw_node_text:
     end;
 
 def backtick_fence($text):
-  "`" * ([3, ($text | scan("`+") | length + 1)] | max);
+  backtick_delimiter($text; 3);
 def render_node:
   . as $node
   | if $node == null then
@@ -49,9 +73,14 @@ def render_node:
     elif $node.type == "text" then
       apply_marks($node.text // ""; $node.marks)
     elif $node.type == "hardBreak" then
-      "\n"
+      "  \n"
     elif $node.type == "mention" then
-      "@" + ($node.attrs.text // $node.attrs.displayName // $node.attrs.id // "mention")
+      ($node.attrs.text // "") as $text
+      | if $text != "" then
+          ($text | escape_markdown_text)
+        else
+          "@" + (($node.attrs.displayName // $node.attrs.id // "mention") | tostring | escape_markdown_text)
+        end
     elif $node.type == "emoji" then
       ($node.attrs.text // $node.attrs.shortName // ":emoji:")
     elif $node.type == "status" then
@@ -60,11 +89,11 @@ def render_node:
       ($node.attrs.timestamp // "")
     elif ($node.type == "inlineCard" or $node.type == "blockCard") then
       ($node.attrs.url // "") as $url
-      | if $url == "" then "" else "[" + $url + "](" + $url + ")" end
+      | if $url == "" then "" else markdown_link(($url | escape_markdown_text); $url) end
     elif $node.type == "media" then
       ($node.attrs.url // "") as $url
-      | ($node.attrs.alt // $node.attrs.id // "attachment") as $label
-      | if $url == "" then "[attachment: " + $label + "]" else "[" + $label + "](" + $url + ")" end
+      | ($node.attrs.alt // $node.attrs.id // "attachment" | tostring | escape_markdown_text) as $label
+      | if $url == "" then "[attachment: " + $label + "]" else markdown_link($label; $url) end
     elif $node.type == "paragraph" then
       (($node.content // []) | map(render_node) | join("")) + "\n\n"
     elif $node.type == "heading" then

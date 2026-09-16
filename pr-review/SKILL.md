@@ -27,7 +27,7 @@ A plain review request never authorizes publication.
 2. Pin the declared base and target, collect the complete diff and commit messages, and inspect current check evidence.
 3. Gather repository standards and the first available spec source.
 4. Choose locality decomposition by default, or use the two-axis panel for a focused change with a spec.
-5. Start every reviewer in one fan-out with its exact mode, scope, hunks, standards, spec, role, and contract.
+5. Start every reviewer in one fan-out with its exact mode, scope, hunks, applicable standards and spec, role, and contract.
 6. Validate each structured result, then aggregate it without merging or reranking findings.
 7. Publish through the Gitkeeper only when the user explicitly authorized an external change.
 
@@ -48,8 +48,8 @@ Every verdict-bearing brief must include:
 
 - Exactly one review mode and the exact files it owns.
 - The assigned diff hunks, pasted into the brief rather than rediscovered by the reviewer.
-- Complete standards content at the target revision, or an immutable explicitly authorized URL.
-- Complete spec content when a spec exists.
+- Complete standards content at the target revision, or an immutable explicitly authorized URL, for modes that run Standards.
+- Complete spec content for modes that run Spec.
 - [`references/reviewer-role.md`](references/reviewer-role.md) and [`references/review-contract.md`](references/review-contract.md).
 - Permission to read the full diff only for necessary cross-file context.
 

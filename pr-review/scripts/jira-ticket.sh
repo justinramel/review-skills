@@ -3,8 +3,8 @@
 #
 #   jira-ticket.sh <ISSUE-KEY>        e.g. jira-ticket.sh FGP-1392
 #
-# Reads credentials from JIRA_BASE_URL, JIRA_EMAIL, and JIRA_API_TOKEN when all
-# are set. Otherwise it fills missing values from
+# Uses JIRA_BASE_URL, JIRA_EMAIL, and JIRA_API_TOKEN only when all three are
+# set. Otherwise it loads all three values from
 # ${XDG_CONFIG_HOME:-~/.config}/pr-review/jira.json.
 # Requires: curl, jq.
 set -euo pipefail
@@ -50,15 +50,9 @@ if [ -z "${JIRA_BASE_URL:-}" ] || [ -z "${JIRA_EMAIL:-}" ] || [ -z "${JIRA_API_T
     exit 1
   fi
 
-  if [ -z "${JIRA_BASE_URL:-}" ]; then
-    JIRA_BASE_URL="$(read_config_value base_url)" || { echo "Invalid Jira base URL in $CONFIG_FILE." >&2; exit 1; }
-  fi
-  if [ -z "${JIRA_EMAIL:-}" ]; then
-    JIRA_EMAIL="$(read_config_value email)" || { echo "Invalid Jira email in $CONFIG_FILE." >&2; exit 1; }
-  fi
-  if [ -z "${JIRA_API_TOKEN:-}" ]; then
-    JIRA_API_TOKEN="$(read_config_value api_token)" || { echo "Invalid Jira API token in $CONFIG_FILE." >&2; exit 1; }
-  fi
+  JIRA_BASE_URL="$(read_config_value base_url)" || { echo "Invalid Jira base URL in $CONFIG_FILE." >&2; exit 1; }
+  JIRA_EMAIL="$(read_config_value email)" || { echo "Invalid Jira email in $CONFIG_FILE." >&2; exit 1; }
+  JIRA_API_TOKEN="$(read_config_value api_token)" || { echo "Invalid Jira API token in $CONFIG_FILE." >&2; exit 1; }
 fi
 
 case "$JIRA_BASE_URL" in

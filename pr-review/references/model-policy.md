@@ -58,4 +58,4 @@ Review environment: requested reviewers <profile>/high; observed <model>/<effort
 Prefer runtime metadata.
 If that is unavailable, use the reviewer's exact self-report.
 Never infer effort from a model name or configured role.
-Use `inherited` only when inheritance is known and `not exposed` when the runtime does not reveal a value.
+Use `not exposed` whenever the exact resolved model or effort is unavailable, including when inheritance is known.
