@@ -1,15 +1,19 @@
 # Review contract
 
 This is the rubric every reviewer applies. Pair it with the stance in
-[`reviewer-role.md`](reviewer-role.md) — that file is who you are and how you
-approach your slice; this file is what you check and the shape you return.
+[`reviewer-role.md`](reviewer-role.md): that file defines who you are and how
+you approach your assigned scope; this file defines what you check and return.
 
 ## What to review
 
-Review your slice on two questions at once:
+The brief assigns exactly one review mode:
 
-1. **Standards** — does this diff match how this repo writes code?
-2. **Spec** — does it do what the issue / plan asked, and only that?
+- **`locality`**: review the assigned file slice on Standards and, when a spec
+  was supplied, Spec.
+- **`standards-only`**: review the whole diff on Standards only.
+- **`spec-only`**: review the whole diff on Spec only.
+
+Never run an axis the assigned mode excludes.
 
 ### Standards, in priority order
 
@@ -77,24 +81,26 @@ The linked issue / plan is the source of truth. Report, quoting the spec line:
 - **Wrong**: a requirement that looks implemented but whose behaviour does not
   hold up.
 
-If no spec was supplied, say so and review Standards only.
+If no spec was supplied, locality reviewers run Standards only and a two-axis
+panel omits the Spec-only reviewer.
 
 ## Severity
 
-- **blocker** — must fix before merge: wrong behaviour, a security hole, data
-  loss, a documented-standard violation with real consequence.
-- **major** — should fix before merge: a structural problem (Bolted-on Branch,
-  Papered-over Boundary, unjustified Speculative Generality), a missing spec
-  requirement, an implementation-coupled test guarding load-bearing behaviour.
-- **minor** — worth fixing: a smell that is a judgement call, a narrow test, a
-  naming problem.
-- **nit** — cosmetic; take it or leave it.
+- **blocker**: must fix before merge, such as wrong behaviour, a security hole,
+  data loss, or a documented-standard violation with real consequence.
+- **major**: should fix before merge, such as a structural problem (Bolted-on
+  Branch, Papered-over Boundary, unjustified Speculative Generality), missing or
+  wrong required behaviour, material scope creep, or an implementation-coupled
+  test guarding load-bearing behaviour.
+- **minor**: worth fixing, such as a judgement-call smell, narrow test, naming
+  problem, or documented-standard breach without material consequence.
+- **nit**: cosmetic; take it or leave it.
 
 ## Verdict
 
-- `approve` — no blockers, no majors.
-- `approve-with-nits` — no blockers, no majors, only minors/nits.
-- `request-changes` — at least one blocker or major.
+- `approve`: no findings.
+- `approve-with-nits`: at least one minor or nit, with no blocker or major.
+- `request-changes`: at least one blocker or major.
 
 ## Output
 

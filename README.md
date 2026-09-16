@@ -18,11 +18,11 @@ pollutes another's.
 
 ## Install
 
-These are [agent skills](https://github.com/obra/skills) — install with the
-`skills` CLI:
+These are [agent skills](https://github.com/vercel-labs/skills).
+Install them with the maintained `skills` CLI:
 
 ```bash
-skills add justinramel/review-skills
+npx skills add justinramel/review-skills
 ```
 
 That makes the skills available to every agent the CLI targets (Claude Code,
@@ -41,18 +41,22 @@ review since origin/main
 
 ## Jira (optional)
 
-If your PRs reference Jira tickets, the Spec axis can read the ticket a PR
-implements. Run the one-time setup — it walks you through creating an Atlassian
-API token and stores the credentials locally (`~/.config/pr-review/jira.env`,
-`chmod 600`, never committed):
+If your PRs reference Jira tickets, the Spec axis can read the ticket a PR implements.
+The bundled setup script loads helper files next to it, so run setup from a repository clone rather than from the project where the skill was installed:
 
 ```bash
-pr-review/scripts/setup-jira.sh
+git clone https://github.com/justinramel/review-skills.git
+cd review-skills
+./pr-review/scripts/setup-jira.sh
 ```
 
-After that, when a PR title, branch, or commit carries a Jira key (`FGP-1392`),
-the reviewer fetches that ticket as the spec. No Jira? The skill falls back to
-the linked GitHub issue. Needs `curl` and `jq`.
+From an existing clone, run only the final command.
+Setup stores credentials as non-executable JSON at `~/.config/pr-review/jira.json` by default with permissions `0600`.
+The installed skill reads that same user-level configuration, so you may delete the setup clone afterward.
+
+When a PR title, branch, or commit carries a Jira key such as `FGP-1392`, the reviewer fetches that ticket as the spec.
+Without Jira, the skill falls back to the linked GitHub issue.
+Setup and ticket fetching require `curl` and `jq`.
 
 ## What's in here
 
@@ -77,7 +81,7 @@ run the panel as designed, the agent's harness needs two capabilities:
    Without them the reviewers run sequentially; the report is identical, only
    slower.
 2. **Diff access** — either a PR resolver (`pr://<owner>/<repo>/<n>/diff/all`) or
-   plain `git diff <base>...HEAD`.
+   plain `git diff <base>...<target>`.
 
 Nothing here depends on a specific IDE, desktop app, or model provider.
 
