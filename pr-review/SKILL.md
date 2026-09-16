@@ -47,6 +47,9 @@ This skill needs a harness that can:
 2. **Read the diff** — either a PR resolver (`pr://<owner>/<repo>/<n>/diff/all`
    and per-file `pr://<owner>/<repo>/<n>/diff/<index>`) or plain
    `git diff <base>...<target>`. Nothing here depends on a specific IDE or app.
+3. **Model control**: run the orchestrator and every reviewer under
+   [`references/model-policy.md`](references/model-policy.md). The policy is
+   provider-neutral and requires high reasoning for every verdict-bearing agent.
 
 ## Process
 
@@ -108,6 +111,10 @@ For a **locality** panel, bucket the changed files:
 
 ### 4. Spawn the panel in parallel
 
+Before the fan-out, apply the model policy. Set each reviewer's model profile
+and reasoning effort explicitly when the runner supports it. Otherwise verify
+that reviewers inherit a compliant orchestrator profile.
+
 Start every reviewer in **one fan-out**, not one at a time. Each reviewer's
 brief MUST contain, and MUST be limited to:
 
@@ -165,9 +172,13 @@ if and only if no reviewer returned `request-changes`.
 
 Then write the report:
 
-1. **One-line header**: overall verdict + which decomposition you used + counts
+1. If the runner could not enforce the model policy, state that limitation
+   before any verdict.
+2. **One-line header**: overall verdict + which decomposition you used + counts
    (blockers / majors / minors / nits).
-2. **Verdict table**:
+3. **Model line**: effective orchestrator and reviewer model/effort settings,
+   using `inherited` or `not exposed` where required by the model policy.
+4. **Verdict table**:
 
    ```
    | Agent | Files | Verdict | Confidence |
@@ -175,9 +186,9 @@ Then write the report:
    ```
 
    One row per reviewer. `Confidence` is the self-estimate from §5.
-3. **Findings**, grouped by reviewer, each with `location`, `severity`, and
+5. **Findings**, grouped by reviewer, each with `location`, `severity`, and
    `evidence`. "Nothing found" is a valid, useful result — never pad.
-4. **Recommendation**: merge-ready or not, and any checks the reviewers said a
+6. **Recommendation**: merge-ready or not, and any checks the reviewers said a
    human must confirm (things the diff alone cannot settle).
 
 If tests were not run, say so plainly. The panel reviews the diff; it does not

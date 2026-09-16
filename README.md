@@ -64,26 +64,24 @@ Setup and ticket fetching require `curl` and `jq`.
 |---|---|
 | [`pr-review`](pr-review/SKILL.md) | Panel review of a PR or diff → verdict + confidence table. Two decomposition modes: **by locality** (default, one reviewer per module) and **by axis** (Standards + Spec, for focused PRs). |
 
-Every reviewer adopts the same stance and applies the same bar, pinned in two
-files: [`reviewer-role.md`](pr-review/references/reviewer-role.md) (who the
-reviewer is and how it approaches a slice) and
-[`review-contract.md`](pr-review/references/review-contract.md) (the Fowler smell
-baseline, the test-quality smells, the severity/verdict definitions, and the
-structured output shape).
+Every reviewer adopts the same stance and bar from three references:
+
+- [`reviewer-role.md`](pr-review/references/reviewer-role.md) defines the reviewer's scope and behavior.
+- [`review-contract.md`](pr-review/references/review-contract.md) defines smells, severity, verdicts, and structured output.
+- [`model-policy.md`](pr-review/references/model-policy.md) defines the required model capability and reasoning level.
 
 ## Requirements
 
-This is a **methodology packaged as instructions**, not a standalone program. To
-run the panel as designed, the agent's harness needs two capabilities:
+This is a **methodology packaged as instructions**, not a standalone program.
+The agent harness needs three capabilities:
 
-1. **Parallel subagents** — a way to start N background reviewers in one fan-out
-   (e.g. Oh My Pi's `task` tool, or any runner with concurrent subagents).
-   Without them the reviewers run sequentially; the report is identical, only
-   slower.
-2. **Diff access** — either a PR resolver (`pr://<owner>/<repo>/<n>/diff/all`) or
-   plain `git diff <base>...<target>`.
+1. **Parallel subagents**: a way to start N background reviewers in one fan-out, such as Oh My Pi's `task` tool or another concurrent subagent runner.
+   Without parallel execution, the reviewers may run sequentially and produce the same report more slowly.
+2. **Diff access**: either a PR resolver such as `pr://<owner>/<repo>/<n>/diff/all` or plain `git diff <base>...<target>`.
+3. **High-reasoning model control**: the orchestrator and every verdict-bearing reviewer must run with high reasoning or the nearest provider equivalent.
+   Per-agent settings are preferred; compliant inheritance from the orchestrator is acceptable.
 
-Nothing here depends on a specific IDE, desktop app, or model provider.
+The model policy is capability-based and does not require a specific model provider.
 
 ## About the confidence column
 
