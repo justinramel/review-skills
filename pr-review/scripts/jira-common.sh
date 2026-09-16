@@ -22,6 +22,7 @@ jira_curl() {
   credentials="${JIRA_EMAIL}:${JIRA_API_TOKEN}"
   escaped="$(curl_config_escape "$credentials")"
 
-  # curl reads authentication from stdin, so the token never enters argv.
-  printf 'user = "%s"\n' "$escaped" | command curl --config - "$@"
+  # Disable user curl configuration before loading authentication from stdin, so
+  # verbose or trace options cannot expose the token.
+  printf 'user = "%s"\n' "$escaped" | command curl --disable --config - "$@"
 }

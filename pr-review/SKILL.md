@@ -187,8 +187,7 @@ when available, then the reviewer's report. Never infer a model or effort value.
 Gather every reviewer's result. Do **not** merge or rerank findings across
 reviewers. The panel exists so one slice or axis cannot mask another. Compute
 the overall verdict from the worst reviewer verdict using this fixed order:
-`request-changes` > `approve-with-nits` > `approve`. The result is merge-ready
-if and only if no reviewer returned `request-changes`.
+`request-changes` > `approve-with-nits` > `approve`.
 
 Assign one merge-risk band:
 
@@ -205,6 +204,10 @@ Assign one merge-risk band:
 The first applicable band in the order `RED`, `GRAY`, `AMBER`, `GREEN` wins.
 Risk is not an average, confidence score, or finding count. A diff-only review
 without test evidence cannot be green.
+
+Mark the result merge-ready only when no `RED` or `GRAY` condition applies,
+relevant validation ran and passed, and the Spec axis ran or was not needed.
+Minor or nit findings alone do not block merging.
 
 Then write the report:
 

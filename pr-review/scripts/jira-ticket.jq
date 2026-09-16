@@ -1,5 +1,11 @@
+def escape_markdown_text:
+  gsub("\\\\"; "\\\\")
+  | gsub("(?<syntax>[`*_{}\\[\\]()#+.!|>-])"; "\\\(.syntax)");
+
 def apply_marks($text; $marks):
-  reduce ($marks // [])[] as $mark ($text;
+  ($marks // []) as $all_marks
+  | (if any($all_marks[]; .type == "code") then $text else ($text | escape_markdown_text) end) as $initial
+  | reduce $all_marks[] as $mark ($initial;
     if $mark.type == "link" and ($mark.attrs.href // "") != "" then
       "[" + . + "](" + $mark.attrs.href + ")"
     elif $mark.type == "strong" then
@@ -18,12 +24,28 @@ def apply_marks($text; $marks):
 def trim_block:
   gsub("\\n+$"; "");
 
-def render_node:
+def raw_node_text:
   . as $node
   | if $node == null then
       ""
     elif ($node | type) == "string" then
       $node
+    elif $node.type == "text" then
+      ($node.text // "")
+    elif $node.type == "hardBreak" then
+      "\n"
+    else
+      (($node.content // []) | map(raw_node_text) | join(""))
+    end;
+
+def backtick_fence($text):
+  "`" * ([3, ($text | scan("`+") | length + 1)] | max);
+def render_node:
+  . as $node
+  | if $node == null then
+      ""
+    elif ($node | type) == "string" then
+      ($node | escape_markdown_text)
     elif $node.type == "text" then
       apply_marks($node.text // ""; $node.marks)
     elif $node.type == "hardBreak" then
@@ -50,9 +72,11 @@ def render_node:
     elif $node.type == "blockquote" then
       (($node.content // []) | map(render_node) | join("") | trim_block | split("\n") | map("> " + .) | join("\n")) + "\n\n"
     elif $node.type == "codeBlock" then
-      "```" + ($node.attrs.language // "") + "\n"
-      + (($node.content // []) | map(render_node) | join("") | trim_block)
-      + "\n```\n\n"
+      (($node.content // []) | map(raw_node_text) | join("") | trim_block) as $body
+      | backtick_fence($body) as $fence
+      | $fence + ($node.attrs.language // "") + "\n"
+      + $body
+      + "\n" + $fence + "\n\n"
     elif $node.type == "rule" then
       "---\n\n"
     elif $node.type == "bulletList" then
@@ -64,8 +88,10 @@ def render_node:
     elif $node.type == "orderedList" then
       (($node.content // []) | to_entries | map(
         . as $entry
-        | (($entry.value.content // []) | map(render_node) | join("") | trim_block | gsub("\\n"; "\n   ")) as $body
-        | (($entry.key + ($node.attrs.order // 1)) | tostring) + ". " + $body + "\n"
+        | ((($entry.key + ($node.attrs.order // 1)) | tostring) + ". ") as $marker
+        | (" " * ($marker | length)) as $indent
+        | (($entry.value.content // []) | map(render_node) | join("") | trim_block | gsub("\\n"; "\n" + $indent)) as $body
+        | $marker + $body + "\n"
       ) | join("")) + "\n"
     elif $node.type == "taskList" then
       (($node.content // []) | map(
