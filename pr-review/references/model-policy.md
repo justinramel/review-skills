@@ -20,20 +20,42 @@ Do not downgrade verdict-bearing reviewers to a lightweight, fast, or summarizat
 
 When the runner supports per-agent configuration, set the reviewer model and effort explicitly before the fan-out.
 When it does not, reviewers may inherit the orchestrator settings only if the orchestrator meets this policy.
+The gitkeeper is not verdict-bearing, so this requirement does not apply to its publication-only work.
+
+## Oh My Pi setup
+
+OMP can pin the bundled `reviewer` agent to a model role and expose per-task effort.
+Set the strong model available in that installation in `~/.omp/agent/config.yml`:
+
+```yaml
+modelRoles:
+  review: "<strong-review-model>:high"
+
+task:
+  enableEffort: true
+  agentModelOverrides:
+    reviewer: "@review"
+```
+
+After changing this setting, start a session whose task schema exposes `effort`.
+Pass `effort: "hi"` on every verdict-bearing reviewer item.
+The role mapping selects the model, and the task item requests the highest reasoning level that model supports.
 
 ## Unavailable settings
 
 If the harness cannot provide or select the required profile, use the strongest model and highest reasoning effort it exposes.
-State the limitation in the report before presenting verdicts.
-Do not claim that the requested model policy was enforced when the runner does not expose the actual settings.
+Do not claim that a requested model or effort was effective when the runtime did not expose the resolved value.
+This limitation affects review-environment evidence, not the deterministic verdict or risk calculation.
 
 ## Reporting
 
-Report the effective settings when the runner exposes them:
+Separate requested policy from observed runtime values:
 
 ```text
-Models: orchestrator <model>/<effort>; reviewers <model>/<effort>
+Review environment: requested reviewers <profile>/high; observed <model>/<effort>
 ```
 
-Use `inherited` when reviewers inherit the orchestrator profile.
-Use `not exposed` when the harness does not reveal a model or effort value.
+Prefer runtime metadata.
+If that is unavailable, use the reviewer's exact self-report.
+Never infer effort from a model name or configured role.
+Use `inherited` only when inheritance is known and `not exposed` when the runtime does not reveal a value.

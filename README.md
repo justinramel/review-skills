@@ -1,7 +1,8 @@
 # review-skills
 
 Agent skills for reviewing pull requests with a **panel of independent reviewers
-running in parallel**, reported side by side as a verdict + confidence table.
+running in parallel**, followed by a change summary, merge-risk band, findings,
+areas worth human inspection, and a verdict + confidence table.
 
 ```
 | Agent | Files | Verdict | Confidence |
@@ -33,10 +34,16 @@ agent to review a PR:
 review https://github.com/OWNER/REPO/pull/123
 ```
 
-or
+For a local branch:
 
 ```
 review since origin/main
+```
+
+Ask explicitly when you also want the completed review published as a PR comment:
+
+```
+review and comment on https://github.com/OWNER/REPO/pull/123
 ```
 
 ## Jira (optional)
@@ -62,24 +69,30 @@ Setup and ticket fetching require `curl` and `jq`.
 
 | Skill | What it does |
 |---|---|
-| [`pr-review`](pr-review/SKILL.md) | Panel review of a PR or diff → verdict + confidence table. Two decomposition modes: **by locality** (default, one reviewer per module) and **by axis** (Standards + Spec, for focused PRs). |
+| [`pr-review`](pr-review/SKILL.md) | Parallel PR review with locality or Standards/Spec decomposition, a deterministic merge-risk band, focused inspection areas, and an optional developer-facing PR comment. |
 
 Every reviewer adopts the same stance and bar from three references:
 
-- [`reviewer-role.md`](pr-review/references/reviewer-role.md) defines the reviewer's scope and behavior.
-- [`review-contract.md`](pr-review/references/review-contract.md) defines smells, severity, verdicts, and structured output.
-- [`model-policy.md`](pr-review/references/model-policy.md) defines the required model capability and reasoning level.
+- [`reviewer-role.md`](pr-review/references/reviewer-role.md) defines reviewer scope and behavior.
+- [`review-contract.md`](pr-review/references/review-contract.md) defines smells, severity, verdicts, runtime evidence, and structured output.
+- [`model-policy.md`](pr-review/references/model-policy.md) defines model selection, reasoning effort, and OMP configuration.
+
+When requested, [`gitkeeper-role.md`](pr-review/references/gitkeeper-role.md) turns the settled report into a developer-facing PR comment.
+It publishes only when the user explicitly authorizes the external change.
 
 ## Requirements
 
 This is a **methodology packaged as instructions**, not a standalone program.
-The agent harness needs three capabilities:
+The agent harness needs three review capabilities:
 
 1. **Parallel subagents**: a way to start N background reviewers in one fan-out, such as Oh My Pi's `task` tool or another concurrent subagent runner.
    Without parallel execution, the reviewers may run sequentially and produce the same report more slowly.
 2. **Diff access**: either a PR resolver such as `pr://<owner>/<repo>/<n>/diff/all` or plain `git diff <base>...<target>`.
 3. **High-reasoning model control**: the orchestrator and every verdict-bearing reviewer must run with high reasoning or the nearest provider equivalent.
    Per-agent settings are preferred; compliant inheritance from the orchestrator is acceptable.
+
+Publishing the optional PR comment also needs an authenticated, write-capable GitHub client such as `gh`.
+Without it, the gitkeeper returns the complete draft without changing GitHub.
 
 The model policy is capability-based and does not require a specific model provider.
 

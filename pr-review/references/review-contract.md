@@ -112,6 +112,10 @@ Return exactly this shape:
   "files": ["<file>", "..."],
   "verdict": "approve | approve-with-nits | request-changes",
   "confidence": 0.0,
+  "runtime": {
+    "model": "<exact model identifier | not exposed>",
+    "effort": "<exact reasoning level | not exposed>"
+  },
   "findings": [
     { "severity": "blocker|major|minor|nit",
       "location": "path:line",
@@ -124,3 +128,7 @@ Return exactly this shape:
 right**, given how much of the context you could see. It is a self-estimate, not
 a calibrated score. Lower it when you had to guess at cross-file behaviour the
 diff didn't show.
+
+Report the exact runtime model and reasoning effort only when the runtime exposes
+them to you. Never infer either value from the brief, configured policy, or model
+name. Use `not exposed` for each unavailable value.

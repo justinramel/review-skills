@@ -1,6 +1,9 @@
 ---
 name: pr-review
-description: Review a pull request or a diff with a panel of independent reviewers running in parallel, then report their verdicts side by side as a verdict + confidence table. Use when the user asks to review a PR, a GitHub PR URL, a branch, or "review since X", and wants a fast, breadth-first panel review rather than a single pass.
+description: >-
+  Review a pull request or diff with parallel independent reviewers, then report the verdict, merge risk, change summary, confidence table, findings, and code worth inspecting.
+  Use when the user asks to review a PR, a GitHub PR URL, a branch, or "review since X".
+  Publish a developer-facing PR comment only when the user explicitly asks.
 ---
 
 # PR Review
@@ -62,6 +65,10 @@ This skill needs a harness that can:
   commit's complete message through the PR resolver or GitHub pull-request
   commits API before selecting the spec source. The diff does not contain commit
   messages.
+  Fetch the current check-run or status rollup for the head SHA when the resolver
+  or GitHub API exposes it. Record completed success, failure, pending, and
+  missing evidence separately. A verification claim in the PR body is context,
+  not proof that a check passed.
 - **`review since <ref>`** → set `base` to `<ref>` and `target` to `HEAD`.
 - **Named branch / ref** → set `target` to the supplied ref and `base` to the
   repository's default branch. Resolve the default branch from repository or
@@ -115,6 +122,12 @@ Before the fan-out, apply the model policy. Set each reviewer's model profile
 and reasoning effort explicitly when the runner supports it. Otherwise verify
 that reviewers inherit a compliant orchestrator profile.
 
+For Oh My Pi, pass `effort: "hi"` on every reviewer task item when the task
+schema exposes that field. If it does not, use the configured reviewer profile,
+report the observed value as `not exposed`, and point to the one-time OMP setup
+in the model policy. Never edit user configuration during a review. Do not
+mistake a requested profile for an observed runtime setting.
+
 Start every reviewer in **one fan-out**, not one at a time. Each reviewer's
 brief MUST contain, and MUST be limited to:
 
@@ -142,7 +155,7 @@ Never let a reviewer edit files, run formatters, or write to git.
 
 ### 5. Reviewer output contract
 
-Every reviewer returns exactly this shape (the contract spells out each field):
+Every reviewer returns exactly this shape. The contract defines each field:
 
 ```json
 {
@@ -150,6 +163,10 @@ Every reviewer returns exactly this shape (the contract spells out each field):
   "files": ["src/common/config.ts", "vitest.config.ts"],
   "verdict": "approve | approve-with-nits | request-changes",
   "confidence": 0.0,
+  "runtime": {
+    "model": "<exact model identifier | not exposed>",
+    "effort": "<exact reasoning level | not exposed>"
+  },
   "findings": [
     { "severity": "blocker|major|minor|nit",
       "location": "path:line",
@@ -159,40 +176,85 @@ Every reviewer returns exactly this shape (the contract spells out each field):
 ```
 
 `confidence` is the reviewer's **own self-estimate** that its verdict is right.
-It is **not a calibrated metric** — report it, but label it as a self-estimate
+It is **not a calibrated metric**. Report it, but label it as a self-estimate
 and never treat it as a quality score.
+
+Runtime values are observations, not policy declarations. Use runner metadata
+when available, then the reviewer's report. Never infer a model or effort value.
 
 ### 6. Aggregate and report
 
 Gather every reviewer's result. Do **not** merge or rerank findings across
-reviewers; the panel exists so one slice or axis cannot mask another. Compute
+reviewers. The panel exists so one slice or axis cannot mask another. Compute
 the overall verdict from the worst reviewer verdict using this fixed order:
 `request-changes` > `approve-with-nits` > `approve`. The result is merge-ready
 if and only if no reviewer returned `request-changes`.
 
+Assign one merge-risk band:
+
+- `RED`: any reviewer requested changes, any blocker or major exists, a required
+  check failed, or a security or data-loss risk remains.
+- `GRAY`: a reviewer failed, critical scope was not reviewed, or conflicting
+  evidence prevents an honest rating.
+- `AMBER`: no red or gray condition exists, but minor or nit findings remain,
+  relevant validation did not run, or the Spec axis was unavailable for a
+  behaviour-changing PR.
+- `GREEN`: every reviewer approved with no findings, the intended scope was
+  covered, relevant checks passed, and Spec was reviewed or was not needed.
+
+The first applicable band in the order `RED`, `GRAY`, `AMBER`, `GREEN` wins.
+Risk is not an average, confidence score, or finding count. A diff-only review
+without test evidence cannot be green.
+
 Then write the report:
 
-1. If the runner could not enforce the model policy, state that limitation
-   before any verdict.
-2. **One-line header**: overall verdict + which decomposition you used + counts
+1. **One-line header**: overall verdict + decomposition choice + counts
    (blockers / majors / minors / nits).
-3. **Model line**: effective orchestrator and reviewer model/effort settings,
-   using `inherited` or `not exposed` where required by the model policy.
-4. **Verdict table**:
+2. **Merge risk**: band + one concrete sentence explaining the deciding rule.
+3. **Review environment**: requested orchestrator and reviewer profile, followed
+   by observed model and effort values. Use `not exposed` where required. State
+   unavailable runtime evidence as a fact here, not as a warning before the
+   verdict.
+4. **Change summary**: two to five bullets grounded in the diff, not copied from
+   the PR description.
+5. **Verdict table**:
 
    ```
    | Agent | Files | Verdict | Confidence |
    |---|---|---|---|
    ```
 
-   One row per reviewer. `Confidence` is the self-estimate from §5.
-5. **Findings**, grouped by reviewer, each with `location`, `severity`, and
-   `evidence`. "Nothing found" is a valid, useful result — never pad.
-6. **Recommendation**: merge-ready or not, and any checks the reviewers said a
-   human must confirm (things the diff alone cannot settle).
+   One row per reviewer. `Confidence` is the self-estimate from section 5.
+6. **Findings**, grouped by reviewer, each with `location`, `severity`, and
+   `evidence`. "Nothing found" is valid. Never pad.
+7. **Areas to inspect**: two to five changed functions, scripts, or sections
+   that deserve human attention, each with a path and concrete reason. Include
+   high-impact code even when it has no finding.
+8. **Recommendation**: merge-ready or not, the smallest next action, and checks
+   a human must confirm.
+9. **Validation**: exact checks observed. If tests were not run, say so plainly.
 
-If tests were not run, say so plainly. The panel reviews the diff; it does not
-prove the build.
+### 7. Draft or publish the PR comment
+
+For a GitHub pull request, start one non-verdict-bearing general-purpose worker
+named `Gitkeeper` after the report is complete only when the user requested a
+comment draft or publication. Otherwise stop after reporting the review. The
+Gitkeeper publishes the settled review; it does not make or change technical
+judgements.
+
+Give it the PR URL, final report, changed-file list, and
+[`references/gitkeeper-role.md`](references/gitkeeper-role.md). It may read the
+full PR diff only to quote a small example already supported by a finding.
+
+The gitkeeper always returns a developer-facing comment draft. It may post or
+update the comment only when the user explicitly requested publication or
+approved the draft. Without authorization or a write-capable GitHub client,
+return the draft without changing GitHub.
+
+Use a top-level PR comment, not a formal approve or request-changes review. The
+author may be reviewing their own PR, and GitHub does not allow self-approval.
+Use the marker in the gitkeeper role to update the authenticated user's prior
+comment instead of adding duplicates.
 
 ## Notes
 
