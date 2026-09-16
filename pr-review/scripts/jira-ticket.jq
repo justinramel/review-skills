@@ -1,5 +1,10 @@
+def neutralize_control_tags:
+  gsub("<"; "&lt;")
+  | gsub(">"; "&gt;");
+
 def escape_markdown_text:
-  gsub("\\\\"; "\\\\")
+  neutralize_control_tags
+  | gsub("\\\\"; "\\\\")
   | gsub("(?<syntax>[`*_{}\\[\\]()#+.!>-])"; "\\\(.syntax)");
 
 def markdown_link_destination:
@@ -28,7 +33,7 @@ def markdown_link($label; $url):
 
 def apply_marks($text; $marks):
   ($marks // []) as $all_marks
-  | (if any($all_marks[]; .type == "code") then $text else ($text | escape_markdown_text) end) as $initial
+  | (if any($all_marks[]; .type == "code") then ($text | neutralize_control_tags) else ($text | escape_markdown_text) end) as $initial
   | reduce $all_marks[] as $mark ($initial;
     if $mark.type == "link" and ($mark.attrs.href // "") != "" then
       markdown_link(.; $mark.attrs.href)
@@ -53,9 +58,9 @@ def raw_node_text:
   | if $node == null then
       ""
     elif ($node | type) == "string" then
-      $node
+      ($node | neutralize_control_tags)
     elif $node.type == "text" then
-      ($node.text // "")
+      ($node.text // "" | neutralize_control_tags)
     elif $node.type == "hardBreak" then
       "\n"
     else
@@ -82,11 +87,11 @@ def render_node:
           "@" + (($node.attrs.displayName // $node.attrs.id // "mention") | tostring | escape_markdown_text)
         end
     elif $node.type == "emoji" then
-      ($node.attrs.text // $node.attrs.shortName // ":emoji:")
+      ($node.attrs.text // $node.attrs.shortName // ":emoji:" | tostring | escape_markdown_text)
     elif $node.type == "status" then
-      "[" + ($node.attrs.text // "status") + "]"
+      "[" + ($node.attrs.text // "status" | tostring | escape_markdown_text) + "]"
     elif $node.type == "date" then
-      ($node.attrs.timestamp // "")
+      ($node.attrs.timestamp // "" | tostring | escape_markdown_text)
     elif ($node.type == "inlineCard" or $node.type == "blockCard") then
       ($node.attrs.url // "") as $url
       | if $url == "" then "" else markdown_link(($url | escape_markdown_text); $url) end
@@ -103,7 +108,8 @@ def render_node:
     elif $node.type == "codeBlock" then
       (($node.content // []) | map(raw_node_text) | join("") | trim_block) as $body
       | backtick_fence($body) as $fence
-      | $fence + ($node.attrs.language // "") + "\n"
+      | ((($node.attrs // {}).language // "") | tostring | neutralize_control_tags | gsub("[\\r\\n]"; " ")) as $language
+      | $fence + $language + "\n"
       + $body
       + "\n" + $fence + "\n\n"
     elif $node.type == "rule" then
@@ -144,7 +150,7 @@ def render_node:
           + "\n\n"
         end
     elif ($node.type == "expand" or $node.type == "nestedExpand") then
-      "### " + ($node.attrs.title // "Details") + "\n\n"
+      "### " + ($node.attrs.title // "Details" | tostring | escape_markdown_text) + "\n\n"
       + (($node.content // []) | map(render_node) | join(""))
     else
       (($node.content // []) | map(render_node) | join(""))
@@ -155,28 +161,28 @@ def render_value:
   | if $value == null then
       "(none)"
     elif ($value | type) == "string" then
-      if $value == "" then "(none)" else $value end
+      if $value == "" then "(none)" else ($value | neutralize_control_tags) end
     elif ($value | type) == "array" then
       if ($value | length) == 0 then "(none)" else ($value | map(render_value) | join("\n")) end
     elif ($value | type) == "object" and ($value.type? != null) then
       ($value | render_node | trim_block) as $rendered
       | if $rendered == "" then "(none)" else $rendered end
     elif ($value | type) == "object" then
-      ($value.value // $value.name // ($value | tojson))
+      ($value.value // $value.name // ($value | tojson) | tostring | neutralize_control_tags)
     else
-      ($value | tostring)
+      ($value | tostring | neutralize_control_tags)
     end;
 
 . as $issue
 | ($field_catalog[0] // []) as $catalog
 | ($catalog | map(select((.name // "" | ascii_downcase | contains("acceptance criteria"))))) as $acceptance_fields
 | ([
-    "# " + $key + ": " + ($issue.fields.summary // "(no summary)"),
+    "# " + $key + ": " + ($issue.fields.summary // "(no summary)" | tostring | escape_markdown_text),
     "",
-    "- Type: " + ($issue.fields.issuetype.name // "?"),
-    "- Status: " + ($issue.fields.status.name // "?"),
-    "- Priority: " + ($issue.fields.priority.name // "?"),
-    "- Labels: " + (($issue.fields.labels // []) | join(", ")),
+    "- Type: " + ($issue.fields.issuetype.name // "?" | tostring | escape_markdown_text),
+    "- Status: " + ($issue.fields.status.name // "?" | tostring | escape_markdown_text),
+    "- Priority: " + ($issue.fields.priority.name // "?" | tostring | escape_markdown_text),
+    "- Labels: " + (($issue.fields.labels // []) | map(tostring | escape_markdown_text) | join(", ")),
     "- Link: " + $base + "/browse/" + $key,
     "",
     "## Description",
@@ -195,7 +201,7 @@ def render_value:
       ($acceptance_fields | map(
         . as $field
         | [
-            "## " + $field.name,
+            "## " + ($field.name | tostring | escape_markdown_text),
             "",
             ($issue.fields[$field.id] | render_value),
             ""

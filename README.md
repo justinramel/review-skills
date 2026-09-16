@@ -1,8 +1,6 @@
 # review-skills
 
-Agent skills for reviewing pull requests with a **panel of independent reviewers
-running in parallel**, followed by a change summary, merge-risk band, findings,
-areas worth human inspection, and a verdict + confidence table.
+Agent skills for reviewing pull requests with a **panel of independent reviewers running in parallel**, followed by a change summary, merge-risk band, findings, areas worth human inspection, and a verdict + confidence table.
 
 ```
 | Agent | Files | Verdict | Confidence |
@@ -13,9 +11,7 @@ areas worth human inspection, and a verdict + confidence table.
 | EventsListLinks | events-page.view-model.ts + test            | approve | 0.91 |
 ```
 
-Each reviewer starts with fresh context and owns one slice of the change, so
-independent slices are reviewed at the same time and no reviewer's context
-pollutes another's.
+Each reviewer starts with fresh context and owns one slice of the change, so independent slices are reviewed at the same time and no reviewer's context pollutes another's.
 
 ## Install
 
@@ -26,9 +22,8 @@ Install them with the maintained `skills` CLI:
 npx skills add justinramel/review-skills
 ```
 
-That makes the skills available to every agent the CLI targets (Claude Code,
-Codex, Gemini CLI, GitHub Copilot, OpenCode, and Oh My Pi). Then just ask your
-agent to review a PR:
+That makes the skills available to every agent the CLI targets (Claude Code, Codex, Gemini CLI, GitHub Copilot, OpenCode, and Oh My Pi).
+Then just ask your agent to review a PR:
 
 ```
 review https://github.com/OWNER/REPO/pull/123
@@ -99,20 +94,14 @@ The model policy is capability-based and does not require a specific model provi
 
 ## About the confidence column
 
-`confidence` is each reviewer's **own estimate that its verdict is right**, given
-how much context it could see. It is a self-reported number, **not a calibrated
-metric** — useful for spotting where a reviewer was unsure, not as a quality
-score. The skill labels it as a self-estimate wherever it is reported.
+`confidence` is each reviewer's **own estimate that its verdict is right**, given how much context it could see.
+It is a self-reported number, **not a calibrated metric** - useful for spotting where a reviewer was unsure, not as a quality score.
+The skill labels it as a self-estimate wherever it is reported.
 
 ## Lineage
 
-The two-axis (Standards + Spec) split and the Fowler code-smell baseline are
-long-standing ideas — the smells are from Martin Fowler's _Refactoring_ (ch. 3),
-and a similar two-axis skill ships in
-[Matt Pocock's skills](https://github.com/mattpocock/skills). This repo's
-contribution is the **parallel locality panel** and the **verdict + confidence
-table** as a reporting contract, plus a single reviewer contract shared across
-whichever decomposition you pick.
+The two-axis (Standards + Spec) split and the Fowler code-smell baseline are long-standing ideas - the smells are from Martin Fowler's _Refactoring_ (ch. 3), and a similar two-axis skill ships in [Matt Pocock's skills](https://github.com/mattpocock/skills).
+This repo's contribution is the **parallel locality panel** and the **verdict + confidence table** as a reporting contract, plus a single reviewer contract shared across whichever decomposition you pick.
 
 ## License
 
