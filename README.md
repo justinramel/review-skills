@@ -71,14 +71,15 @@ Setup and ticket fetching require `curl` and `jq`.
 |---|---|
 | [`pr-review`](pr-review/SKILL.md) | Parallel PR review with locality or Standards/Spec decomposition, a deterministic merge-risk band, focused inspection areas, and an optional developer-facing PR comment. |
 
-Every reviewer adopts the same stance and bar from three references:
+The skill keeps its trigger file concise and loads focused references only when needed:
 
+- [`workflow.md`](pr-review/references/workflow.md) defines target pinning, evidence gathering, decomposition, reviewer briefs, and publication.
+- [`reporting.md`](pr-review/references/reporting.md) defines structured results, deterministic aggregation, merge risk, merge readiness, and report order.
 - [`reviewer-role.md`](pr-review/references/reviewer-role.md) defines reviewer scope and behavior.
 - [`review-contract.md`](pr-review/references/review-contract.md) defines smells, severity, verdicts, runtime evidence, and structured output.
 - [`model-policy.md`](pr-review/references/model-policy.md) defines model selection, reasoning effort, and OMP configuration.
-
-When requested, [`gitkeeper-role.md`](pr-review/references/gitkeeper-role.md) turns the settled report into a developer-facing PR comment.
-It publishes only when the user explicitly authorizes the external change.
+- [`two-axis.md`](pr-review/references/two-axis.md) defines the focused Standards-only and Spec-only panel.
+- [`gitkeeper-role.md`](pr-review/references/gitkeeper-role.md) turns an authorized settled report into a developer-facing PR comment.
 
 ## Requirements
 
