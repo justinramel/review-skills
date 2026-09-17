@@ -24,11 +24,11 @@ A plain review request never authorizes publication.
 ## Required workflow
 
 1. Read [`references/model-policy.md`](references/model-policy.md), use the Review profile for ordinary verdict axes, the Deep review profile for Architecture & DDD, and the Publication profile for Gitkeeper.
-2. Pin the declared base and target, collect the complete diff and commit messages, and inspect current check evidence.
+2. Pin the declared base and target, preferably with the bundled evidence collector, and capture the complete diff, commit messages, standards candidates, spec candidates, and current checks.
 3. Gather repository standards and the first available spec source.
 4. Choose locality decomposition by default, or use the two-axis panel for a focused change with a spec.
 5. Apply the architecture gate; only when it selects `run`, gather architecture and domain context and add an Architecture & DDD reviewer.
-6. Start every reviewer in one fan-out with its exact mode, scope, hunks, applicable standards, spec, and review references.
+6. Compile task-ready briefs when the tool is available, then start every reviewer in one fan-out with its exact mode, scope, hunks, applicable standards, spec, review references, and strict schema.
 7. Enforce [`schemas/reviewer-result.schema.json`](schemas/reviewer-result.schema.json) at invocation time, validate each result semantically, then aggregate without merging or reranking findings.
 8. Publish through the Gitkeeper only when the user explicitly authorized an external change.
 
@@ -62,6 +62,7 @@ Reviewers must not read the target's local working tree, edit files, run formatt
 ## Bundled resources
 
 - [`references/workflow.md`](references/workflow.md): target pinning, evidence gathering, decomposition, reviewer briefs, and publication flow.
+- [`references/tooling.md`](references/tooling.md): evidence, panel, aggregation, and immutable-snapshot tool interfaces.
 - [`references/reporting.md`](references/reporting.md): result validation, aggregation, risk bands, report order, and merge readiness.
 - [`references/reviewer-role.md`](references/reviewer-role.md): independent reviewer stance and scope limits.
 - [`references/review-contract.md`](references/review-contract.md): Standards and Spec rubric, smells, severities, verdicts, and output contract.
@@ -70,4 +71,5 @@ Reviewers must not read the target's local working tree, edit files, run formatt
 - [`references/architecture-review.md`](references/architecture-review.md): conditional gate and Architecture/DDD rubric.
 - [`references/gitkeeper-role.md`](references/gitkeeper-role.md): safe draft or publication of the settled review.
 - [`schemas/reviewer-result.schema.json`](schemas/reviewer-result.schema.json): strict invocation-level contract for every verdict-bearing reviewer.
+- [`scripts/review-tools.mjs`](scripts/review-tools.mjs): deterministic review mechanics used by the workflow.
 - [`scripts/setup-jira.sh`](scripts/setup-jira.sh) and [`scripts/jira-ticket.sh`](scripts/jira-ticket.sh): optional Jira spec setup and retrieval.

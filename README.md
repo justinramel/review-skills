@@ -86,18 +86,23 @@ The skill keeps its trigger file concise and loads focused references only when 
 - [`two-axis.md`](pr-review/references/two-axis.md) defines the focused Standards-only and Spec-only panel.
 - [`architecture-review.md`](pr-review/references/architecture-review.md) defines when architecture review is warranted and its Architecture/DDD lens.
 - [`gitkeeper-role.md`](pr-review/references/gitkeeper-role.md) turns an authorized settled report into a developer-facing PR comment.
+- [`tooling.md`](pr-review/references/tooling.md) defines the bundled evidence, panel, aggregation, and immutable-snapshot interfaces.
 - [`reviewer-result.schema.json`](pr-review/schemas/reviewer-result.schema.json) enforces the verdict-bearing result shape at task invocation time.
 
 ## Requirements
 
-This is a **methodology packaged as instructions**, not a standalone program.
-The agent harness needs three review capabilities:
+The skill combines a review methodology with a dependency-free Node.js tool for repeatable review mechanics.
+The agent harness needs four review capabilities:
 
 1. **Parallel subagents**: a way to start N background reviewers in one fan-out, such as Oh My Pi's `task` tool or another concurrent subagent runner.
    Without parallel execution, the reviewers may run sequentially and produce the same report more slowly.
 2. **Diff access**: either a PR resolver such as `pr://<owner>/<repo>/<n>/diff/all` or plain `git diff <base>...<target>`.
 3. **Capability-based model control**: the orchestrator uses the strongest general reasoning profile, ordinary verdict axes use a strong long-context review profile, and Architecture & DDD uses the deepest review profile.
    Model names are installation-specific; per-agent settings are preferred, and compliant inheritance is acceptable when it meets the required capability.
+4. **Invocation-level schema enforcement**: a way to apply [`reviewer-result.schema.json`](pr-review/schemas/reviewer-result.schema.json) as each verdict task's strict output schema and reject structurally invalid results before aggregation.
+
+The bundled review tool requires Node.js 20 or newer.
+Private GitHub evidence collection and snapshots require `GH_TOKEN` or `GITHUB_TOKEN` with repository read access.
 
 Publishing the optional PR comment also needs an authenticated, write-capable GitHub client such as `gh`.
 Without it, the gitkeeper returns the complete draft without changing GitHub.
