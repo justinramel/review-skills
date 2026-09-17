@@ -65,21 +65,22 @@ Use the first source that resolves:
 If Jira credentials are missing, tell the user to run `scripts/setup-jira.sh`, then continue with reachable review work.
 If no spec exists, state that fact and omit the Spec axis.
 
-## 3. Choose a decomposition and apply the architecture gate
+## 3. Choose a review depth and decomposition
 
-Use locality by default for changes spanning multiple modules or concerns.
-Keep each implementation file with its tests and group files that changed for one reason.
-Aim for at most six verdict-bearing reviewers in total and merge thin buckets.
-Give each bucket a short CamelCase name such as `ConfigInfra`.
+Use `fast` unless the user explicitly requests a thorough review.
 
-Use the two-axis panel for a small, focused change with a spec.
-Follow [`two-axis.md`](two-axis.md) and assign one `standards-only` reviewer and one `spec-only` reviewer.
+- **Fast**: at most three verdict-bearing reviewers in total. When the architecture gate selects `run`, reserve one slot for Architecture & DDD and use at most two locality reviewers. Merge adjacent concerns into end-to-end execution paths rather than creating thin file buckets.
+- **Thorough**: at most six verdict-bearing reviewers. Use only when the user asks for a thorough review.
 
-Apply the gate in [`architecture-review.md`](architecture-review.md) after reading the complete diff. Record `run` or `skip` with one concrete reason. When it runs, reserve one panel slot for an `architecture-only` reviewer named `Architecture & DDD` and assign every architecture-relevant hunk. This is an independent axis alongside either locality or the two-axis panel.
+Use locality for changes spanning multiple modules or concerns. Keep each implementation file with its tests, group files that change for one reason, and give each bucket a short CamelCase name such as `ConfigInfra`.
+
+Use the two-axis panel for a small, focused change with a spec. Follow [`two-axis.md`](two-axis.md) and assign one `standards-only` reviewer and one `spec-only` reviewer.
+
+Apply the gate in [`architecture-review.md`](architecture-review.md) after reading the complete diff. Record `run` or `skip` with one concrete reason. When it runs, add an `architecture-only` reviewer named `Architecture & DDD` and assign every architecture-relevant hunk. This is an independent axis alongside either locality or the two-axis panel.
 
 For a `run`, gather the architecture and domain context that governs those hunks: architecture decisions, ADRs, module maps, and domain glossaries. If present, use `CONTEXT-MAP.md` to locate each changed area's `CONTEXT.md`. Read applicable sources at the target revision and provide complete content or immutable target-revision URLs in the Architecture & DDD brief.
 
-State the chosen decomposition, architecture-gate result, and reasons near the start of the report.
+Record the selected depth, decomposition, architecture-gate result, and reasons for the collapsed review-details appendix.
 
 ## 4. Build reviewer briefs
 
@@ -121,9 +122,9 @@ Use one task per independent locality bucket or review axis; mixed agent types o
 Confirm every result validates against [`../schemas/reviewer-result.schema.json`](../schemas/reviewer-result.schema.json), then apply the semantic rules in [`review-contract.md`](review-contract.md).
 A completed worker is not accepted evidence until its assigned file list, verdict, severity, findings, and observed runtime fields match the contract.
 Reject a structurally invalid result instead of translating an agent-specific schema after the fact.
-Do not merge or rerank findings across reviewers.
-Follow [`reporting.md`](reporting.md) for the deterministic overall verdict, risk band, merge readiness, and final report.
-Use the deterministic aggregator to validate result structure and verdict consistency, count findings, and apply the fixed verdict, risk, and merge-readiness rules.
+Preserve every finding's reviewer and location. Consolidate exact duplicates into one developer action only when all provenance remains visible; never merge findings with different evidence or fixes.
+Follow [`reporting.md`](reporting.md) for the deterministic overall verdict, merge status, merge readiness, and developer report.
+Use the deterministic aggregator to validate result structure and verdict consistency, count findings, and apply the fixed verdict, status, and merge-readiness rules.
 Treat `valid: false` as a failed reviewer result; do not repair it into an accepted shape.
 
 Use the immutable snapshot command only when exact-head runtime validation adds evidence beyond the available checks.

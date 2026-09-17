@@ -8,7 +8,6 @@
     "name",
     "files",
     "verdict",
-    "confidence",
     "runtime",
     "findings"
   ],
@@ -31,11 +30,6 @@
         "approve-with-nits",
         "request-changes"
       ]
-    },
-    "confidence": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 1
     },
     "runtime": {
       "type": "object",
@@ -63,7 +57,9 @@
         "required": [
           "severity",
           "location",
-          "evidence"
+          "summary",
+          "evidence",
+          "fix"
         ],
         "properties": {
           "severity": {
@@ -78,7 +74,15 @@
             "type": "string",
             "minLength": 1
           },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          },
           "evidence": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fix": {
             "type": "string",
             "minLength": 1
           }

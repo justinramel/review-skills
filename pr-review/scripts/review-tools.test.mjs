@@ -41,7 +41,6 @@ const approveResult = {
   name: 'Standards',
   files: ['src/app.ts', 'src/new.ts'],
   verdict: 'approve',
-  confidence: 0.9,
   runtime: { model: 'provider/reviewer', effort: 'high' },
   findings: []
 }
@@ -255,9 +254,46 @@ test('compiles task-ready reviewer briefs with strict schema', async () => {
   assert.equal(panel.reviewers[0].profile, 'review')
   assert.equal(panel.reviewers[0].schemaMode, 'strict')
   assert.equal(panel.reviewers[0].outputSchema.additionalProperties, false)
+  assert.equal(panel.reviewDepth, 'fast')
+  assert.equal(
+    Object.hasOwn(panel.reviewers[0].outputSchema.properties, 'confidence'),
+    false
+  )
   assert.match(panel.reviewers[0].task, /Exact assigned diff hunks/)
   assert.match(panel.reviewers[0].task, /Use boring TypeScript/)
   assert.match(panel.reviewers[0].task, /src\/new\.ts/)
+})
+
+test('defaults to a three-reviewer fast panel and requires explicit thorough depth', async () => {
+  const evidence = evidenceFixture()
+  const reviewers = ['First', 'Second', 'Third', 'Fourth'].map((name) => ({
+    name,
+    mode: 'standards-only',
+    files: ['src/app.ts', 'src/new.ts']
+  }))
+
+  await assert.rejects(
+    compilePanel({
+      evidence,
+      plan: {
+        fullDiffUri: 'pr://acme/widget/7/diff/all',
+        reviewers
+      }
+    }),
+    /fast review supports at most 3 verdict-bearing reviewers/
+  )
+
+  const panel = await compilePanel({
+    evidence,
+    plan: {
+      reviewDepth: 'thorough',
+      fullDiffUri: 'pr://acme/widget/7/diff/all',
+      reviewers
+    }
+  })
+
+  assert.equal(panel.reviewDepth, 'thorough')
+  assert.equal(panel.reviewers.length, 4)
 })
 
 test('rejects incomplete panel ownership and missing axis context', async () => {
@@ -299,12 +335,49 @@ test('rejects incomplete panel ownership and missing axis context', async () => 
 
 test('validates reviewer semantics and rejects agent wrappers', () => {
   assert.deepEqual(validateReviewerResult(approveResult), [])
+  assert.deepEqual(
+    validateReviewerResult({
+      ...approveResult,
+      verdict: 'request-changes',
+      findings: [
+        {
+          severity: 'major',
+          location: 'src/app.ts:1',
+          summary: 'The changed path drops the request',
+          evidence: 'The handler returns before forwarding the request.',
+          fix: 'Forward the request and assert the observed response.'
+        }
+      ]
+    }),
+    []
+  )
   assert.match(
     validateReviewerResult({
-      overall_correctness: 'correct',
-      confidence: 0.9
+      overall_correctness: 'correct'
     }).join('\n'),
     /unsupported keys|name is required/
+  )
+  assert.match(
+    validateReviewerResult({
+      ...approveResult,
+      confidence: 0.9
+    }).join('\n'),
+    /unsupported keys: confidence/
+  )
+  assert.match(
+    validateReviewerResult({
+      ...approveResult,
+      verdict: 'request-changes',
+      findings: [
+        {
+          severity: 'major',
+          location: 'src/app.ts:1',
+          evidence: 'The changed path drops the request.',
+          fix: 'Preserve the request and assert its observable result.'
+        }
+      ]
+    }).join('\n'),
+    /summary is required/
   )
   assert.match(
     validateReviewerResult({
@@ -336,30 +409,30 @@ test('aggregates green, amber, red, and gray outcomes', () => {
 
   assert.deepEqual(
     {
-      risk: aggregateReview(complete).mergeRisk,
+      status: aggregateReview(complete).mergeStatus,
       ready: aggregateReview(complete).mergeReady
     },
-    { risk: 'GREEN', ready: true }
+    { status: 'GREEN', ready: true }
   )
   assert.equal(
     aggregateReview({
       ...complete,
       spec: { status: 'unavailable', behaviorChanging: true }
-    }).mergeRisk,
+    }).mergeStatus,
     'AMBER'
   )
   assert.equal(
     aggregateReview({
       ...complete,
       checks: { state: 'failure', runs: [] }
-    }).mergeRisk,
+    }).mergeStatus,
     'RED'
   )
   assert.equal(
     aggregateReview({
       ...complete,
       reviewers: [{ overall_correctness: 'correct' }]
-    }).mergeRisk,
+    }).mergeStatus,
     'GRAY'
   )
 })

@@ -12,13 +12,13 @@ Run two reviewers with explicit, non-overlapping modes:
 
 Each brief MUST state its review mode.
 The assigned mode selects which parts of [`reviewer-role.md`](reviewer-role.md) and [`review-contract.md`](review-contract.md) apply.
-Both reviewers see the whole diff and return the same structured result. If the gate in [`architecture-review.md`](architecture-review.md) selects `run`, add a third independent `architecture-only` reviewer for the architecture-relevant hunks. The base panel still renders as two rows:
+Both reviewers see the whole diff and return the same structured result. If the gate in [`architecture-review.md`](architecture-review.md) selects `run`, add a third independent `architecture-only` reviewer for the architecture-relevant hunks. This fits the default fast depth:
 
 ```
-| Agent | Files | Verdict | Confidence (self-estimate) |
-|---|---|---|---|
-| Standards | (whole diff) | approve | 0.9 |
-| Spec | (whole diff) | approve-with-nits | 0.8 |
+| Review area | Files | Verdict | Findings |
+|---|---|---|---:|
+| Standards | (whole diff) | approve | 0 |
+| Spec | (whole diff) | approve-with-nits | 1 |
 ```
 
 ## Why the axes stay separate

@@ -583,7 +583,16 @@ export const compilePanel = async ({ evidence, plan }) => {
   if (typeof plan.fullDiffUri !== 'string' || !plan.fullDiffUri) {
     throw new Error('Panel plan must provide fullDiffUri')
   }
-
+  const reviewDepth = plan.reviewDepth ?? 'fast'
+  if (!['fast', 'thorough'].includes(reviewDepth)) {
+    throw new Error(`Unsupported review depth ${reviewDepth}`)
+  }
+  const maximumReviewers = reviewDepth === 'fast' ? 3 : 6
+  if (plan.reviewers.length > maximumReviewers) {
+    throw new Error(
+      `${reviewDepth} review supports at most ${maximumReviewers} verdict-bearing reviewers`
+    )
+  }
 
   const changedFiles = evidence.diff.files.map((file) => file.path)
   const changedFileSet = new Set(changedFiles)
@@ -701,7 +710,7 @@ Return exactly the reviewer result contract. Use name ${JSON.stringify(reviewer.
     }
   })
 
-  return { pinned, reviewers }
+  return { pinned, reviewDepth, reviewers }
 }
 
 const validateJsonSchema = (value, schema, location, errors) => {
@@ -850,7 +859,7 @@ export const aggregateReview = (input) => {
     gate: 'skip',
     reviewed: false
   }
-  let mergeRisk
+  let mergeStatus
   let decidingRule
 
   if (
@@ -861,7 +870,7 @@ export const aggregateReview = (input) => {
     failedValidation ||
     input.securityOrDataLossRisk === true
   ) {
-    mergeRisk = 'RED'
+    mergeStatus = 'RED'
     decidingRule = 'A reviewer requested changes, a major risk remains, or required validation failed.'
   } else if (
     validationErrors.length > 0 ||
@@ -869,7 +878,7 @@ export const aggregateReview = (input) => {
     input.conflictingEvidence === true ||
     (architecture.gate === 'run' && architecture.reviewed !== true)
   ) {
-    mergeRisk = 'GRAY'
+    mergeStatus = 'GRAY'
     decidingRule = 'A reviewer result was invalid, critical scope was not reviewed, or evidence conflicts.'
   } else if (
     counts.minor > 0 ||
@@ -878,18 +887,18 @@ export const aggregateReview = (input) => {
     incompleteValidation ||
     (spec.status === 'unavailable' && spec.behaviorChanging === true)
   ) {
-    mergeRisk = 'AMBER'
+    mergeStatus = 'AMBER'
     decidingRule =
       spec.status === 'unavailable' && spec.behaviorChanging === true
         ? 'The Spec axis was unavailable for a behavior-changing change.'
         : 'Non-blocking findings or relevant validation remain.'
   } else {
-    mergeRisk = 'GREEN'
+    mergeStatus = 'GREEN'
     decidingRule = 'Every reviewer approved and all applicable review and validation evidence is complete.'
   }
 
   const mergeReady =
-    !['RED', 'GRAY'].includes(mergeRisk) &&
+    !['RED', 'GRAY'].includes(mergeStatus) &&
     !['failure', 'pending'].includes(checks.state) &&
     !failedValidation &&
     !incompleteValidation &&
@@ -901,7 +910,7 @@ export const aggregateReview = (input) => {
     validationErrors,
     overallVerdict,
     findings: counts,
-    mergeRisk,
+    mergeStatus,
     decidingRule,
     mergeReady,
     reviewers: reviewerResults
