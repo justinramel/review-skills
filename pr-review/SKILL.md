@@ -1,8 +1,8 @@
 ---
 name: pr-review
 description: >-
-  Reviews pull requests and diffs with parallel independent reviewers, conditionally adding an architecture and DDD axis, then reports findings, confidence, verdicts, and merge risk.
-  Use when the user asks to review a PR, URL, branch, diff, or changes since a ref, or explicitly asks to publish the completed review as a PR comment.
+  PR review with parallel independent reviewers, a conditional Architecture & DDD axis, evidence-first findings, confidence, verdicts, and merge risk.
+  MUST use for a GitHub pull-request URL, "review PR", "review since <ref>", or a request to publish a completed review as a PR comment.
 ---
 
 # PR Review

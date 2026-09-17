@@ -10,7 +10,7 @@ Agent skills for reviewing pull requests with a **panel of independent reviewers
 | EventPageView   | event-page.view-model.ts + test, ...        | approve | 0.96 |
 | EventsListLinks | events-page.view-model.ts + test            | approve | 0.91 |
 
-🟢 GREEN - all reviewers approved, intended scope was covered, and relevant checks passed.
+🟢 GREEN - all reviewers approved, intended scope was covered, and every applicable check passed or no applicable automated validation existed.
 ```
 
 Each reviewer starts with fresh context and owns one slice of the change, so independent slices are reviewed at the same time and no reviewer's context pollutes another's.
@@ -29,6 +29,14 @@ Then just ask your agent to review a PR:
 
 ```
 review https://github.com/OWNER/REPO/pull/123
+```
+
+Skill selection uses the harness's installed skill registry; a repository clone alone may not register `pr-review`.
+Start a new agent session after installation and confirm that `pr-review` is available.
+If another installed review skill overlaps, select this one explicitly:
+
+```
+use the pr-review skill to review https://github.com/OWNER/REPO/pull/123
 ```
 
 For a local branch:

@@ -33,20 +33,20 @@ Apply the first matching band in this order:
 
 - `RED`: any reviewer requested changes, any blocker or major exists, a required check failed, or a security or data-loss risk remains.
 - `GRAY`: a reviewer failed, critical scope was not reviewed, or conflicting evidence prevents an honest rating.
-- `AMBER`: no RED or GRAY condition exists, but minor or nit findings remain, relevant validation did not run, or the Spec axis was unavailable for a behavior-changing change.
-- `GREEN`: every reviewer approved with no findings, intended scope was covered, relevant checks passed, Spec was reviewed or was not needed, and the Architecture & DDD axis ran or was skipped by its gate.
+- `AMBER`: no RED or GRAY condition exists, but minor or nit findings remain, available relevant validation did not run, or the Spec axis was unavailable for a behavior-changing change.
+- `GREEN`: every reviewer approved with no findings, intended scope was covered, every applicable check passed or no applicable automated or runtime validation exists, Spec was reviewed or was not needed, and the Architecture & DDD axis ran or was skipped by its gate.
 
 Render the selected band with its coloured marker: 🔴 `RED`, ⚪ `GRAY`, 🟠 `AMBER`, or 🟢 `GREEN`. The text label remains canonical; the emoji is presentation only.
 
 Risk is not an average, confidence score, or finding count.
-A diff-only review without test evidence cannot be GREEN.
+No applicable validation is neutral rather than AMBER. Record that none exists. Validation that exists and is relevant but did not run remains AMBER.
 
 ## Merge readiness
 
 Mark the result merge-ready only when all of these conditions hold:
 
 - No RED or GRAY condition applies.
-- Relevant validation ran and passed.
+- Every applicable validation ran and passed, or the review established that no applicable automated or runtime validation exists.
 - The Spec axis ran or was not needed.
 - The Architecture & DDD axis ran or the recorded architecture gate selected `skip`.
 
