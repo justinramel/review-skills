@@ -58,7 +58,7 @@ Lead with evidence and put the verdict table and traffic-light risk at the end. 
 
 1. Two to five diff-grounded change-summary bullets, followed by the decomposition choice and architecture-gate result with their reasons.
 2. Findings grouped by reviewer with location, severity, and evidence.
-3. Two to five changed functions, scripts, or sections worth human inspection, each with a concrete reason.
+3. Two to five changed functions, scripts, or sections worth human inspection, each with a concrete reason. Make every referenced file a Markdown link to the local reviewed file at the relevant line or range, using an absolute `file:///...#L...` URL. Use a commit-pinned GitHub blob URL only when the reviewed file is not available locally. Link each file separately when an item spans files.
 4. Exact validation evidence, including checks that did not run.
 5. Smallest next action and any human checks still required.
 6. Requested orchestrator and reviewer profiles, followed by observed model and effort values.
