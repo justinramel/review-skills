@@ -48,7 +48,7 @@ Mark the result merge-ready only when all of these conditions hold:
 - The Architecture & DDD axis ran or the recorded architecture gate selected `skip`.
 
 Minor or nit findings alone do not block merging.
-Always report `Merge-ready: Yes` or `Merge-ready: No` with its reason immediately before the reviewer table. This keeps AMBER findings that are safe to follow up separate from AMBER evidence gaps that still block merging.
+Always report `Merge-ready: Yes` or `Merge-ready: No` with the aggregator's `mergeReadyReason` immediately before the reviewer table. This keeps AMBER findings that are safe to follow up separate from AMBER evidence gaps that still block merging.
 
 ## Developer report
 
@@ -78,5 +78,5 @@ Use this reviewer coverage table:
 Omit empty finding sections rather than printing one "Nothing found" section per reviewer.
 Use descriptive Markdown link labels rather than bare URLs. Link local reviewed files at the relevant line or range with an absolute `file:///...#L...` URL. Use a commit-pinned GitHub blob URL only when the reviewed file is unavailable locally.
 Ground change summaries and inspection areas in the diff rather than copying the PR description.
-Use Markdown headings and tables only; never wrap report content in HTML or disclosure tags.
+Use Markdown headings, prose, bullets or checklists, links, and tables. Never wrap report content in HTML or disclosure tags.
 Nothing follows the final merge-status line.

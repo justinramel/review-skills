@@ -43,7 +43,7 @@ Then write one top-level developer report in this order:
    Preserve the overall verdict, finding counts, explicit `Merge-ready: Yes|No` decision, reviewer table, and exact GREEN, AMBER, RED, or GRAY deciding reason. Keep the coloured status as the final line.
 
 Omit empty sections.
-Use Markdown headings and tables only; never wrap comment content in HTML or disclosure tags.
+Except for the required `<!-- pr-review-skill -->` marker, use Markdown headings, prose, bullets or checklists, links, and tables. Never wrap comment content in HTML or disclosure tags.
 Write like a teammate speaking to the developer who will act on the review.
 Use short, direct sentences.
 Prefer concrete consequences and fixes over review jargon.

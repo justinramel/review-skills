@@ -871,7 +871,17 @@ export const aggregateReview = (input) => {
     input.securityOrDataLossRisk === true
   ) {
     mergeStatus = 'RED'
-    decidingRule = 'A reviewer requested changes, a major risk remains, or required validation failed.'
+    if (
+      overallVerdict === 'request-changes' ||
+      counts.blocker > 0 ||
+      counts.major > 0
+    ) {
+      decidingRule = 'A reviewer requested changes or a blocker or major finding remains.'
+    } else if (checks.state === 'failure' || failedValidation) {
+      decidingRule = 'Required validation failed.'
+    } else {
+      decidingRule = 'A security or data-loss risk remains.'
+    }
   } else if (
     validationErrors.length > 0 ||
     input.criticalScopeReviewed === false ||
@@ -879,7 +889,15 @@ export const aggregateReview = (input) => {
     (architecture.gate === 'run' && architecture.reviewed !== true)
   ) {
     mergeStatus = 'GRAY'
-    decidingRule = 'A reviewer result was invalid, critical scope was not reviewed, or evidence conflicts.'
+    if (validationErrors.length > 0) {
+      decidingRule = 'A reviewer result was invalid.'
+    } else if (input.criticalScopeReviewed === false) {
+      decidingRule = 'Critical scope was not reviewed.'
+    } else if (input.conflictingEvidence === true) {
+      decidingRule = 'Review evidence conflicts.'
+    } else {
+      decidingRule = 'The required Architecture & DDD review did not run.'
+    }
   } else if (
     counts.minor > 0 ||
     counts.nit > 0 ||
@@ -888,10 +906,13 @@ export const aggregateReview = (input) => {
     (spec.status === 'unavailable' && spec.behaviorChanging === true)
   ) {
     mergeStatus = 'AMBER'
-    decidingRule =
-      spec.status === 'unavailable' && spec.behaviorChanging === true
-        ? 'The Spec axis was unavailable for a behavior-changing change.'
-        : 'Non-blocking findings or relevant validation remain.'
+    if (spec.status === 'unavailable' && spec.behaviorChanging === true) {
+      decidingRule = 'The Spec axis was unavailable for a behavior-changing change.'
+    } else if (checks.state === 'pending' || incompleteValidation) {
+      decidingRule = 'Relevant validation is pending or did not run.'
+    } else {
+      decidingRule = 'Non-blocking findings remain.'
+    }
   } else {
     mergeStatus = 'GREEN'
     decidingRule = 'Every reviewer approved and all applicable review and validation evidence is complete.'
@@ -905,6 +926,25 @@ export const aggregateReview = (input) => {
     ['reviewed', 'not-needed'].includes(spec.status) &&
     (architecture.gate === 'skip' || architecture.reviewed === true)
 
+  let mergeReadyReason
+  if (mergeReady) {
+    mergeReadyReason =
+      counts.minor > 0 || counts.nit > 0
+        ? 'Only non-blocking findings remain; required review and validation evidence is complete.'
+        : 'Required review and validation evidence is complete.'
+  } else if (mergeStatus === 'RED') {
+    mergeReadyReason =
+      'Blocking findings, risks, or failed validation must be resolved before merge.'
+  } else if (mergeStatus === 'GRAY') {
+    mergeReadyReason = 'Review evidence is invalid, incomplete, or conflicting.'
+  } else if (checks.state === 'pending' || incompleteValidation) {
+    mergeReadyReason = 'Relevant validation is pending or did not run.'
+  } else if (!['reviewed', 'not-needed'].includes(spec.status)) {
+    mergeReadyReason = 'The Spec axis did not run and was not marked not-needed.'
+  } else {
+    mergeReadyReason = 'Required review evidence is incomplete.'
+  }
+
   return {
     valid: validationErrors.length === 0,
     validationErrors,
@@ -913,6 +953,7 @@ export const aggregateReview = (input) => {
     mergeStatus,
     decidingRule,
     mergeReady,
+    mergeReadyReason,
     reviewers: reviewerResults
   }
 }

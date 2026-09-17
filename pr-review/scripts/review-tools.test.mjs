@@ -437,6 +437,68 @@ test('aggregates green, amber, red, and gray outcomes', () => {
   )
 })
 
+test('explains whether amber outcomes are merge-ready', () => {
+  const complete = {
+    reviewers: [approveResult],
+    checks: { state: 'success', runs: [] },
+    spec: { status: 'reviewed', behaviorChanging: true },
+    architecture: { gate: 'skip', reviewed: false },
+    validation: [{ name: 'CI', status: 'passed' }]
+  }
+  const minorResult = {
+    ...approveResult,
+    verdict: 'approve-with-nits',
+    findings: [
+      {
+        severity: 'minor',
+        location: 'src/app.ts:1',
+        summary: 'Clarify the result name',
+        evidence: 'The current name obscures the returned state.',
+        fix: 'Rename the result to describe the returned state.'
+      }
+    ]
+  }
+
+  const withMinorFinding = aggregateReview({
+    ...complete,
+    reviewers: [minorResult]
+  })
+  assert.deepEqual(
+    {
+      status: withMinorFinding.mergeStatus,
+      statusReason: withMinorFinding.decidingRule,
+      ready: withMinorFinding.mergeReady,
+      readinessReason: withMinorFinding.mergeReadyReason
+    },
+    {
+      status: 'AMBER',
+      statusReason: 'Non-blocking findings remain.',
+      ready: true,
+      readinessReason:
+        'Only non-blocking findings remain; required review and validation evidence is complete.'
+    }
+  )
+
+  const withIncompleteValidation = aggregateReview({
+    ...complete,
+    validation: [{ name: 'CI', status: 'not-run' }]
+  })
+  assert.deepEqual(
+    {
+      status: withIncompleteValidation.mergeStatus,
+      statusReason: withIncompleteValidation.decidingRule,
+      ready: withIncompleteValidation.mergeReady,
+      readinessReason: withIncompleteValidation.mergeReadyReason
+    },
+    {
+      status: 'AMBER',
+      statusReason: 'Relevant validation is pending or did not run.',
+      ready: false,
+      readinessReason: 'Relevant validation is pending or did not run.'
+    }
+  )
+})
+
 test('materializes an immutable PR snapshot through injected transport', async (t) => {
   const destination = await mkdtemp(path.join(tmpdir(), 'review-snapshot-'))
   t.after(() => rm(destination, { recursive: true, force: true }))

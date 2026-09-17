@@ -174,7 +174,7 @@ node scripts/review-tools.mjs aggregate \
   --out /tmp/pr-review-aggregate.json
 ```
 
-The aggregator validates structure and verdict/finding consistency, preserves reviewer results, counts severities, applies the fixed verdict and status rules, and returns `mergeStatus`, merge readiness, and one deciding rule.
+The aggregator validates structure and verdict/finding consistency, preserves reviewer results, counts severities, applies the fixed verdict and status rules, and returns `mergeStatus` with its `decidingRule` plus `mergeReady` with its independent `mergeReadyReason`.
 It does not merge, deduplicate, rerank, or rewrite findings; the developer report may consolidate only exact duplicates while retaining their provenance.
 A malformed reviewer result produces `GRAY` and `valid: false`; it is never translated into the expected schema.
 
