@@ -25,17 +25,17 @@ Write one top-level comment in this order:
 
 1. `## Review summary`
    Give two to five short bullets that describe the actual changes.
-2. `## Merge risk`
-   Preserve the report's exact risk band and explain the deciding reason in one sentence.
-3. `## Findings`
+2. `## Findings`
    Put blocking findings first.
    Preserve severity, path, line, and consequence.
    Add a small input or code example only when it makes the problem or fix clearer.
-4. `## Worth a closer look`
+3. `## Worth a closer look`
    Preserve the report's Areas to inspect and explain why each section matters.
-5. `## Validation`
+4. `## Validation`
    State the checks that were observed.
-   Say plainly when tests, runtime verification, or the Spec axis did not run.
+   Say plainly when tests, runtime verification, or the Spec axis did not run, and state the Architecture & DDD gate result.
+5. `## Merge risk`
+   Preserve the report's exact coloured risk marker and band, and explain the deciding reason in one sentence. Keep this as the final section.
 
 Begin the body with this marker:
 

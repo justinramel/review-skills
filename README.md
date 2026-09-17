@@ -1,14 +1,16 @@
 # review-skills
 
-Agent skills for reviewing pull requests with a **panel of independent reviewers running in parallel**, followed by a change summary, merge-risk band, findings, areas worth human inspection, and a verdict + confidence table.
+Agent skills for reviewing pull requests with a **panel of independent reviewers running in parallel**, optionally including an Architecture & DDD axis when the diff warrants it. Reports lead with evidence and end with the verdict table plus a coloured merge-risk band.
 
 ```
-| Agent | Files | Verdict | Confidence |
+| Agent | Files | Verdict | Confidence (self-estimate) |
 |---|---|---|---|
 | ConfigInfra     | .env.example, config.ts, vitest.config.ts   | approve | 0.95 |
 | RedriveFlash    | redrive-event.route.ts + test               | approve | 0.98 |
 | EventPageView   | event-page.view-model.ts + test, ...        | approve | 0.96 |
 | EventsListLinks | events-page.view-model.ts + test            | approve | 0.91 |
+
+🟢 GREEN - all reviewers approved, intended scope was covered, and relevant checks passed.
 ```
 
 Each reviewer starts with fresh context and owns one slice of the change, so independent slices are reviewed at the same time and no reviewer's context pollutes another's.
@@ -64,7 +66,7 @@ Setup and ticket fetching require `curl` and `jq`.
 
 | Skill | What it does |
 |---|---|
-| [`pr-review`](pr-review/SKILL.md) | Parallel PR review with locality or Standards/Spec decomposition, a deterministic merge-risk band, focused inspection areas, and an optional developer-facing PR comment. |
+| [`pr-review`](pr-review/SKILL.md) | Parallel PR review with locality or Standards/Spec decomposition, a conditional Architecture & DDD reviewer, a deterministic merge-risk band, and an optional developer-facing PR comment. |
 
 The skill keeps its trigger file concise and loads focused references only when needed:
 
@@ -74,6 +76,7 @@ The skill keeps its trigger file concise and loads focused references only when 
 - [`review-contract.md`](pr-review/references/review-contract.md) defines smells, severity, verdicts, runtime evidence, and structured output.
 - [`model-policy.md`](pr-review/references/model-policy.md) defines model selection, reasoning effort, and OMP configuration.
 - [`two-axis.md`](pr-review/references/two-axis.md) defines the focused Standards-only and Spec-only panel.
+- [`architecture-review.md`](pr-review/references/architecture-review.md) defines when architecture review is warranted and its Architecture/DDD lens.
 - [`gitkeeper-role.md`](pr-review/references/gitkeeper-role.md) turns an authorized settled report into a developer-facing PR comment.
 
 ## Requirements
@@ -101,7 +104,8 @@ The skill labels it as a self-estimate wherever it is reported.
 ## Lineage
 
 The two-axis (Standards + Spec) split and the Fowler code-smell baseline are long-standing ideas - the smells are from Martin Fowler's _Refactoring_ (ch. 3), and a similar two-axis skill ships in [Matt Pocock's skills](https://github.com/mattpocock/skills).
-This repo's contribution is the **parallel locality panel** and the **verdict + confidence table** as a reporting contract, plus a single reviewer contract shared across whichever decomposition you pick.
+The conditional architecture lens uses deep-module and seam vocabulary alongside pragmatic DDD checks; it does not require tactical DDD patterns.
+This repo's contribution is the **parallel locality panel**, conditional Architecture & DDD axis, and the **verdict + confidence table** as a reporting contract, plus a single reviewer contract shared across whichever decomposition you pick.
 
 ## License
 

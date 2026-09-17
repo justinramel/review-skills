@@ -56,27 +56,32 @@ Use the first source that resolves:
 If Jira credentials are missing, tell the user to run `scripts/setup-jira.sh`, then continue with reachable review work.
 If no spec exists, state that fact and omit the Spec axis.
 
-## 3. Choose a decomposition
+## 3. Choose a decomposition and apply the architecture gate
 
 Use locality by default for changes spanning multiple modules or concerns.
 Keep each implementation file with its tests and group files that changed for one reason.
-Aim for at most six reviewers and merge thin buckets.
+Aim for at most six verdict-bearing reviewers in total and merge thin buckets.
 Give each bucket a short CamelCase name such as `ConfigInfra`.
 
 Use the two-axis panel for a small, focused change with a spec.
 Follow [`two-axis.md`](two-axis.md) and assign one `standards-only` reviewer and one `spec-only` reviewer.
 
-State the chosen decomposition and reason in the report's first line.
+Apply the gate in [`architecture-review.md`](architecture-review.md) after reading the complete diff. Record `run` or `skip` with one concrete reason. When it runs, reserve one panel slot for an `architecture-only` reviewer named `Architecture & DDD` and assign every architecture-relevant hunk. This is an independent axis alongside either locality or the two-axis panel.
+
+For a `run`, gather the architecture and domain context that governs those hunks: architecture decisions, ADRs, module maps, and domain glossaries. If present, use `CONTEXT-MAP.md` to locate each changed area's `CONTEXT.md`. Read applicable sources at the target revision and provide complete content or immutable target-revision URLs in the Architecture & DDD brief.
+
+State the chosen decomposition, architecture-gate result, and reasons near the start of the report.
 
 ## 4. Build reviewer briefs
 
 Every brief must contain only the reviewer's required context:
 
-- One mode: `locality`, `standards-only`, or `spec-only`.
+- One mode: `locality`, `standards-only`, `spec-only`, or `architecture-only`.
 - Exact owned files and their complete diff hunks.
 - Permission to read the full diff only for necessary cross-file context.
 - Complete standards content or an immutable explicitly authorized URL for every Standards pass.
 - Complete spec content for every Spec pass.
+- Complete applicable architecture context and the architecture-review reference for `architecture-only`.
 - The full reviewer role and review contract, or direct bundled references the reviewer can read.
 - An instruction to return the exact structured result from the contract.
 
@@ -91,7 +96,7 @@ For Oh My Pi, pass `effort: "hi"` when the task schema exposes it.
 Otherwise use the configured reviewer profile and report unavailable runtime evidence as `not exposed`.
 Never change the user's model configuration during a review.
 
-Start every reviewer in one fan-out call.
+Start every reviewer, including the conditional Architecture & DDD reviewer, in one fan-out call.
 Use one task per independent locality bucket or review axis.
 
 ## 6. Validate and aggregate results

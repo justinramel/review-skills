@@ -10,6 +10,7 @@ The brief assigns exactly one review mode:
 - **`locality`**: review the assigned file slice on Standards and, when a spec was supplied, Spec.
 - **`standards-only`**: review the whole diff on Standards only.
 - **`spec-only`**: review the whole diff on Spec only.
+- **`architecture-only`**: review the architecture-relevant diff only through [`architecture-review.md`](architecture-review.md).
 
 Never run an axis the assigned mode excludes.
 
@@ -60,10 +61,16 @@ Report, quoting the spec line:
 
 If no spec was supplied, locality reviewers run Standards only and a two-axis panel omits the Spec-only reviewer.
 
+### Architecture and DDD
+
+This axis is conditional. The orchestrator applies the gate in [`architecture-review.md`](architecture-review.md); an `architecture-only` reviewer applies its Architecture lens and applies its DDD lens only to domain-bearing code. Repository architecture decisions take precedence over the general lens.
+
+Do not reassess repository style or requirement coverage on this axis. Report design problems only when the diff provides concrete evidence and a proportionate correction.
+
 ## Severity
 
 - **blocker**: must fix before merge, such as wrong behaviour, a security hole, data loss, or a documented-standard violation with real consequence.
-- **major**: should fix before merge, such as a structural problem (Bolted-on Branch, Papered-over Boundary, unjustified Speculative Generality), missing or wrong required behaviour, material scope creep, or an implementation-coupled test guarding load-bearing behaviour.
+- **major**: should fix before merge, such as a structural problem (Bolted-on Branch, Papered-over Boundary, unjustified Speculative Generality, broken dependency direction, or misplaced invariant ownership), missing or wrong required behaviour, material scope creep, or an implementation-coupled test guarding load-bearing behaviour.
 - **minor**: worth fixing, such as a judgement-call smell, narrow test, naming problem, or documented-standard breach without material consequence.
 - **nit**: cosmetic; take it or leave it.
 
