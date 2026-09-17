@@ -86,6 +86,7 @@ The skill keeps its trigger file concise and loads focused references only when 
 - [`two-axis.md`](pr-review/references/two-axis.md) defines the focused Standards-only and Spec-only panel.
 - [`architecture-review.md`](pr-review/references/architecture-review.md) defines when architecture review is warranted and its Architecture/DDD lens.
 - [`gitkeeper-role.md`](pr-review/references/gitkeeper-role.md) turns an authorized settled report into a developer-facing PR comment.
+- [`reviewer-result.schema.json`](pr-review/schemas/reviewer-result.schema.json) enforces the verdict-bearing result shape at task invocation time.
 
 ## Requirements
 
@@ -95,8 +96,8 @@ The agent harness needs three review capabilities:
 1. **Parallel subagents**: a way to start N background reviewers in one fan-out, such as Oh My Pi's `task` tool or another concurrent subagent runner.
    Without parallel execution, the reviewers may run sequentially and produce the same report more slowly.
 2. **Diff access**: either a PR resolver such as `pr://<owner>/<repo>/<n>/diff/all` or plain `git diff <base>...<target>`.
-3. **High-reasoning model control**: the orchestrator and every verdict-bearing reviewer must run with high reasoning or the nearest provider equivalent.
-   Per-agent settings are preferred; compliant inheritance from the orchestrator is acceptable.
+3. **Capability-based model control**: the orchestrator uses the strongest general reasoning profile, ordinary verdict axes use a strong long-context review profile, and Architecture & DDD uses the deepest review profile.
+   Model names are installation-specific; per-agent settings are preferred, and compliant inheritance is acceptable when it meets the required capability.
 
 Publishing the optional PR comment also needs an authenticated, write-capable GitHub client such as `gh`.
 Without it, the gitkeeper returns the complete draft without changing GitHub.

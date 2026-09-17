@@ -83,6 +83,7 @@ Every brief must contain only the reviewer's required context:
 - Complete spec content for every Spec pass.
 - Complete applicable architecture context and the architecture-review reference for `architecture-only`.
 - The full reviewer role and review contract, or direct bundled references the reviewer can read.
+- The invocation-level output schema from [`../schemas/reviewer-result.schema.json`](../schemas/reviewer-result.schema.json).
 - An instruction to return the exact structured result from the contract.
 
 Do not let reviewers read the target's local working tree or target-repository files outside their scope.
@@ -90,26 +91,33 @@ Do not let reviewers edit files, run formatters, run tests, or write to git.
 
 ## 5. Start the panel
 
-Apply the model policy before fan-out.
+Apply the mode-to-profile routing in [`model-policy.md`](model-policy.md) before fan-out.
+Use the Review profile for `locality`, `standards-only`, and `spec-only`; use the Deep review profile for `architecture-only`.
 Set each reviewer model and effort explicitly when the runner exposes those controls.
-For Oh My Pi, pass `effort: "hi"` when the task schema exposes it.
-Otherwise use the configured reviewer profile and report unavailable runtime evidence as `not exposed`.
+For Oh My Pi, pass the high `effort` value when the task schema exposes it.
+Otherwise use the configured role profiles and report unavailable runtime evidence as `not exposed`.
 Never change the user's model configuration during a review.
 
+Load [`../schemas/reviewer-result.schema.json`](../schemas/reviewer-result.schema.json) once.
+When the runner supports invocation-level schemas, pass it as every verdict task's output schema and enable strict validation.
+Prompt text is not schema enforcement: override any agent-default result schema rather than accepting a different shape.
+
 Start every reviewer, including the conditional Architecture & DDD reviewer, in one fan-out call.
-Use one task per independent locality bucket or review axis.
+Use one task per independent locality bucket or review axis; mixed agent types or profiles are allowed inside that fan-out.
 
 ## 6. Validate and aggregate results
 
-Confirm every result matches the schema in [`review-contract.md`](review-contract.md).
-A completed worker is not accepted evidence until its assigned file list, verdict, severity, and findings match the contract.
+Confirm every result validates against [`../schemas/reviewer-result.schema.json`](../schemas/reviewer-result.schema.json), then apply the semantic rules in [`review-contract.md`](review-contract.md).
+A completed worker is not accepted evidence until its assigned file list, verdict, severity, findings, and observed runtime fields match the contract.
+Reject a structurally invalid result instead of translating an agent-specific schema after the fact.
 Do not merge or rerank findings across reviewers.
 Follow [`reporting.md`](reporting.md) for the deterministic overall verdict, risk band, merge readiness, and final report.
 
 ## 7. Draft or publish a PR comment
 
 Do this only when the user requested a comment draft or publication.
-Start one non-verdict-bearing general-purpose worker named `Gitkeeper` after the technical report is settled.
+Start one non-verdict-bearing economical tool-use worker named `Gitkeeper` after the technical report is settled.
+Use the Publication profile from [`model-policy.md`](model-policy.md); on OMP, prefer the mechanical `sonic` agent when it has the required GitHub tools.
 Give it the PR URL, final report, changed-file list, publication authorization, and [`gitkeeper-role.md`](gitkeeper-role.md).
 The Gitkeeper may read the full PR diff only to quote a small example already supported by a finding.
 

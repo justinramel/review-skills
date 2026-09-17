@@ -23,13 +23,13 @@ A plain review request never authorizes publication.
 
 ## Required workflow
 
-1. Read [`references/model-policy.md`](references/model-policy.md) and use the strongest available high-reasoning profile for every verdict-bearing agent.
+1. Read [`references/model-policy.md`](references/model-policy.md), use the Review profile for ordinary verdict axes, the Deep review profile for Architecture & DDD, and the Publication profile for Gitkeeper.
 2. Pin the declared base and target, collect the complete diff and commit messages, and inspect current check evidence.
 3. Gather repository standards and the first available spec source.
 4. Choose locality decomposition by default, or use the two-axis panel for a focused change with a spec.
 5. Apply the architecture gate; only when it selects `run`, gather architecture and domain context and add an Architecture & DDD reviewer.
 6. Start every reviewer in one fan-out with its exact mode, scope, hunks, applicable standards, spec, and review references.
-7. Validate each structured result, then aggregate it without merging or reranking findings.
+7. Enforce [`schemas/reviewer-result.schema.json`](schemas/reviewer-result.schema.json) at invocation time, validate each result semantically, then aggregate without merging or reranking findings.
 8. Publish through the Gitkeeper only when the user explicitly authorized an external change.
 
 Follow the complete orchestration procedure in [`references/workflow.md`](references/workflow.md).
@@ -54,6 +54,7 @@ Every verdict-bearing brief must include:
 - Complete spec content for modes that run Spec.
 - Architecture context and [`references/architecture-review.md`](references/architecture-review.md) for `architecture-only`.
 - [`references/reviewer-role.md`](references/reviewer-role.md) and [`references/review-contract.md`](references/review-contract.md).
+- The strict invocation-level schema in [`schemas/reviewer-result.schema.json`](schemas/reviewer-result.schema.json).
 - Permission to read the full diff only for necessary cross-file context.
 
 Reviewers must not read the target's local working tree, edit files, run formatters, run tests, or write to git.
@@ -68,4 +69,5 @@ Reviewers must not read the target's local working tree, edit files, run formatt
 - [`references/two-axis.md`](references/two-axis.md): focused Standards-only and Spec-only decomposition.
 - [`references/architecture-review.md`](references/architecture-review.md): conditional gate and Architecture/DDD rubric.
 - [`references/gitkeeper-role.md`](references/gitkeeper-role.md): safe draft or publication of the settled review.
+- [`schemas/reviewer-result.schema.json`](schemas/reviewer-result.schema.json): strict invocation-level contract for every verdict-bearing reviewer.
 - [`scripts/setup-jira.sh`](scripts/setup-jira.sh) and [`scripts/jira-ticket.sh`](scripts/jira-ticket.sh): optional Jira spec setup and retrieval.
