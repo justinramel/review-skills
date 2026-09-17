@@ -3,8 +3,8 @@
 # Stores credentials as inert JSON in
 # ${XDG_CONFIG_HOME:-~/.config}/pr-review/jira.json with mode 0600.
 #
-# Re-run any time to update the values. Requires: curl, jq, and optionally a
-# browser opener for the token page.
+# Re-run any time to update the values. Existing values are offered as defaults.
+# Requires: curl, jq, and optionally a browser opener for the token page.
 set -euo pipefail
 
 TOKEN_URL="https://id.atlassian.com/manage-profile/security/api-tokens"
@@ -33,6 +33,15 @@ open_url() {
 command -v curl >/dev/null 2>&1 || { echo "curl is required." >&2; exit 1; }
 command -v jq   >/dev/null 2>&1 || { echo "jq is required." >&2; exit 1; }
 
+saved_base_url=""
+saved_email=""
+saved_api_token=""
+if [ -r "$CONFIG_FILE" ]; then
+  saved_base_url="$(jq -er '.base_url | select(type == "string" and length > 0)' "$CONFIG_FILE" 2>/dev/null || true)"
+  saved_email="$(jq -er '.email | select(type == "string" and length > 0)' "$CONFIG_FILE" 2>/dev/null || true)"
+  saved_api_token="$(jq -er '.api_token | select(type == "string" and length > 0)' "$CONFIG_FILE" 2>/dev/null || true)"
+fi
+
 umask 077
 
 bold "pr-review - Jira setup"
@@ -44,7 +53,12 @@ echo
 # 1. Base URL ---------------------------------------------------------------
 bold "1/3  Your Jira site"
 echo "The base URL of your Jira, e.g. https://your-company.atlassian.net"
-read -r -p "Jira base URL: " JIRA_BASE_URL
+if [ -n "$saved_base_url" ]; then
+  read -r -p "Jira base URL [$saved_base_url]: " JIRA_BASE_URL
+  JIRA_BASE_URL="${JIRA_BASE_URL:-$saved_base_url}"
+else
+  read -r -p "Jira base URL: " JIRA_BASE_URL
+fi
 JIRA_BASE_URL="${JIRA_BASE_URL%/}"
 case "$JIRA_BASE_URL" in
   https://*) ;;
@@ -54,22 +68,33 @@ echo
 
 # 2. Email ------------------------------------------------------------------
 bold "2/3  Your Atlassian account email"
-read -r -p "Email: " JIRA_EMAIL
+if [ -n "$saved_email" ]; then
+  read -r -p "Email [$saved_email]: " JIRA_EMAIL
+  JIRA_EMAIL="${JIRA_EMAIL:-$saved_email}"
+else
+  read -r -p "Email: " JIRA_EMAIL
+fi
 [ -n "$JIRA_EMAIL" ] || { echo "Email cannot be blank." >&2; exit 1; }
 echo
 
 # 3. API token --------------------------------------------------------------
-bold "3/3  Create an API token"
-echo "Opening the Atlassian API token page. Click 'Create API token', give it a"
-echo "label like 'pr-review', then copy the token (you only see it once)."
-if ! open_url "$TOKEN_URL"; then
-  echo "Open this URL in your browser:"
-  echo "  $TOKEN_URL"
+bold "3/3  Your API token"
+echo "Create or manage Atlassian API tokens here:"
+echo "  $TOKEN_URL"
+if open_url "$TOKEN_URL"; then
+  echo "A browser open was requested. Use the URL above if it did not appear."
+else
+  echo "Open the URL above in your browser."
 fi
-
+echo "Create a token labelled 'pr-review', then copy it; it is shown only once."
 echo
 # Hidden entry so the token never lands in terminal scrollback or shell history.
-read -r -s -p "Paste API token: " JIRA_API_TOKEN
+if [ -n "$saved_api_token" ]; then
+  read -r -s -p "Paste a new API token, or press Enter to keep the saved token: " JIRA_API_TOKEN
+  JIRA_API_TOKEN="${JIRA_API_TOKEN:-$saved_api_token}"
+else
+  read -r -s -p "Paste API token: " JIRA_API_TOKEN
+fi
 echo
 [ -n "$JIRA_API_TOKEN" ] || { echo "Token cannot be blank." >&2; exit 1; }
 echo
