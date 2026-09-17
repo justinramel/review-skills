@@ -12,10 +12,10 @@ Run two reviewers with explicit, non-overlapping modes:
 
 Each brief MUST state its review mode.
 The assigned mode selects which parts of [`reviewer-role.md`](reviewer-role.md) and [`review-contract.md`](review-contract.md) apply.
-Both reviewers see the whole diff and return the same structured result, so the report still renders as a two-row verdict table:
+Both reviewers see the whole diff and return the same structured result. If the gate in [`architecture-review.md`](architecture-review.md) selects `run`, add a third independent `architecture-only` reviewer for the architecture-relevant hunks. The base panel still renders as two rows:
 
 ```
-| Agent | Files | Verdict | Confidence |
+| Agent | Files | Verdict | Confidence (self-estimate) |
 |---|---|---|---|
 | Standards | (whole diff) | approve | 0.9 |
 | Spec | (whole diff) | approve-with-nits | 0.8 |
@@ -28,7 +28,7 @@ A change can pass one axis and fail the other:
 - Code that follows every standard but implements the wrong thing results in a Standards pass and Spec failure.
 - Code that implements the spec but breaks repository conventions results in a Spec pass and Standards failure.
 
-Keep the two rows and their findings separate.
+Keep every row and its findings separate, including the conditional Architecture & DDD row.
 Do not merge or rerank findings across axes.
 Compute the overall verdict from the worse row using this fixed order:
 `request-changes` > `approve-with-nits` > `approve`.
