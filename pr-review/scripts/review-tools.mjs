@@ -855,6 +855,9 @@ export const aggregateReview = (input) => {
     ['pending', 'not-run'].includes(item.status)
   )
   const spec = input.spec ?? { status: 'unavailable', behaviorChanging: true }
+  const specComplete =
+    ['reviewed', 'not-needed'].includes(spec.status) ||
+    (spec.status === 'unavailable' && spec.behaviorChanging === false)
   const architecture = input.architecture ?? {
     gate: 'skip',
     reviewed: false
@@ -903,11 +906,14 @@ export const aggregateReview = (input) => {
     counts.nit > 0 ||
     checks.state === 'pending' ||
     incompleteValidation ||
-    (spec.status === 'unavailable' && spec.behaviorChanging === true)
+    !specComplete
   ) {
     mergeStatus = 'AMBER'
-    if (spec.status === 'unavailable' && spec.behaviorChanging === true) {
-      decidingRule = 'The Spec axis was unavailable for a behavior-changing change.'
+    if (!specComplete) {
+      decidingRule =
+        spec.status === 'unavailable' && spec.behaviorChanging === true
+          ? 'The Spec axis was unavailable for a behavior-changing change.'
+          : 'The Spec axis did not run and was not marked not-needed.'
     } else if (checks.state === 'pending' || incompleteValidation) {
       decidingRule = 'Relevant validation is pending or did not run.'
     } else {
@@ -923,7 +929,7 @@ export const aggregateReview = (input) => {
     !['failure', 'pending'].includes(checks.state) &&
     !failedValidation &&
     !incompleteValidation &&
-    ['reviewed', 'not-needed'].includes(spec.status) &&
+    specComplete &&
     (architecture.gate === 'skip' || architecture.reviewed === true)
 
   let mergeReadyReason
@@ -939,7 +945,7 @@ export const aggregateReview = (input) => {
     mergeReadyReason = 'Review evidence is invalid, incomplete, or conflicting.'
   } else if (checks.state === 'pending' || incompleteValidation) {
     mergeReadyReason = 'Relevant validation is pending or did not run.'
-  } else if (!['reviewed', 'not-needed'].includes(spec.status)) {
+  } else if (!specComplete) {
     mergeReadyReason = 'The Spec axis did not run and was not marked not-needed.'
   } else {
     mergeReadyReason = 'Required review evidence is incomplete.'

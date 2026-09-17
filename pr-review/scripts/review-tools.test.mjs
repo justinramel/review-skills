@@ -414,6 +414,22 @@ test('aggregates green, amber, red, and gray outcomes', () => {
     },
     { status: 'GREEN', ready: true }
   )
+  const withoutBehaviorSpec = aggregateReview({
+    ...complete,
+    spec: { status: 'unavailable', behaviorChanging: false }
+  })
+  assert.deepEqual(
+    {
+      status: withoutBehaviorSpec.mergeStatus,
+      ready: withoutBehaviorSpec.mergeReady,
+      readinessReason: withoutBehaviorSpec.mergeReadyReason
+    },
+    {
+      status: 'GREEN',
+      ready: true,
+      readinessReason: 'Required review and validation evidence is complete.'
+    }
+  )
   assert.equal(
     aggregateReview({
       ...complete,

@@ -11,13 +11,13 @@ Agent skills for fast, parallel pull-request review with an optional Architectur
 ## Verdict and merge status
 
 Overall verdict: request-changes - 0 blockers, 1 major, 0 minor, 0 nits.
-Merge-ready: No - one major finding remains.
+Merge-ready: No - Blocking findings, risks, or failed validation must be resolved before merge.
 
 | Review area | Files | Verdict | Findings |
 |---|---|---|---:|
 | Inbox lifecycle | 6 files | request-changes | 1 major |
 
-🔴 RED - a reviewer requested changes and one major finding remains.
+🔴 RED - A reviewer requested changes or a blocker or major finding remains.
 ```
 
 Each reviewer starts with fresh context and owns one concern or review axis. Fast depth is the default and limits the panel to three verdict-bearing reviewers, including the conditional Architecture & DDD axis.
