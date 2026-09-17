@@ -1,16 +1,23 @@
 # review-skills
 
-Agent skills for fast, parallel pull-request review with an optional Architecture & DDD axis. Reports lead with merge status and developer actions; reviewer coverage and runtime details stay in a collapsed appendix.
+Agent skills for fast, parallel pull-request review with an optional Architecture & DDD axis. Reports keep actionable developer findings near the evidence and end with the reviewer table plus a deterministic merge-status band.
 
 ```markdown
-# 🔴 Changes required
-
-0 blockers, 1 major, 0 minor, 0 nits at `HEAD_SHA`; all observed checks passed.
-
 ## Required changes
 
 - [ ] **Prevent inherited Inbox handler lookup** - [`InboxSubscriber.handleEvent`](https://github.com/OWNER/REPO/blob/HEAD_SHA/src/inbox.subscriber.js#L165-L168)
   Use an own-property-safe dispatch map so an event type such as `toString` cannot be marked complete without being handled.
+
+## Verdict and merge status
+
+Overall verdict: request-changes - 0 blockers, 1 major, 0 minor, 0 nits.
+Merge-ready: No - one major finding remains.
+
+| Review area | Files | Verdict | Findings |
+|---|---|---|---:|
+| Inbox lifecycle | 6 files | request-changes | 1 major |
+
+🔴 RED - a reviewer requested changes and one major finding remains.
 ```
 
 Each reviewer starts with fresh context and owns one concern or review axis. Fast depth is the default and limits the panel to three verdict-bearing reviewers, including the conditional Architecture & DDD axis.

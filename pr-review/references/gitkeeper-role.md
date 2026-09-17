@@ -29,18 +29,21 @@ Begin the body with this marker:
 
 Then write one top-level developer report in this order:
 
-1. `# <marker> <merge status>`
-   Preserve the report's exact GREEN, AMBER, RED, or GRAY status and its deciding reason.
+1. `## Review summary`
+   Give two to five short bullets grounded in the diff.
 2. `## Required changes`
    When blocker or major findings exist, render each as a checklist item with its linked location, consequence, and exact fix.
 3. `## Non-blocking suggestions`
    Include only when minor or nit findings exist.
-4. `## Validation`
+4. `## Worth a closer look`
+   Include changed areas that warrant human attention without repeating findings.
+5. `## Validation`
    State the pinned target and observed checks. Say plainly when tests, runtime verification, or the Spec axis did not run and record the Architecture & DDD gate result.
-5. `## Change summary`
-   Give two to five short bullets grounded in the diff.
+6. `## Verdict and merge status`
+   Preserve the overall verdict, finding counts, explicit `Merge-ready: Yes|No` decision, reviewer table, and exact GREEN, AMBER, RED, or GRAY deciding reason. Keep the coloured status as the final line.
 
-Omit empty sections. Include an inspection area only when it is not already represented by a finding.
+Omit empty sections.
+Use Markdown headings and tables only; never wrap comment content in HTML or disclosure tags.
 Write like a teammate speaking to the developer who will act on the review.
 Use short, direct sentences.
 Prefer concrete consequences and fixes over review jargon.
