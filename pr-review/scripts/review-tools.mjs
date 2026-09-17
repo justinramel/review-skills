@@ -33,7 +33,6 @@ const verdictOrder = new Map([
   ['approve-with-nits', 1],
   ['request-changes', 2]
 ])
-const severities = new Set(['blocker', 'major', 'minor', 'nit'])
 const standardBasenames = new Set([
   'AGENTS.md',
   'CONTRIBUTING.md',

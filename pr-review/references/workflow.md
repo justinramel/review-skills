@@ -21,7 +21,6 @@ Read [`tooling.md`](tooling.md) for its JSON interfaces and commands.
 The tools perform mechanics only: the orchestrator still chooses the specification, decomposition, architecture gate, findings, and human-facing report.
 If the runtime cannot execute the tools, follow the equivalent manual steps below and keep the same contracts.
 
-
 ## 1. Pin the change
 
 ### GitHub pull request
@@ -43,7 +42,6 @@ Capture `git diff <base>...<target>`, `git log <base>..<target> --oneline`, and 
 
 Stop before spawning reviewers when a ref does not resolve or the diff is empty.
 The evidence collector performs this pinning for either a GitHub PR or a local range and records the complete results in one JSON artifact.
-
 
 ## 2. Gather review inputs
 
@@ -101,7 +99,6 @@ Do not let reviewers read the target's local working tree or target-repository f
 Do not let reviewers edit files, run formatters, run tests, or write to git.
 After making the decomposition and gate decisions, the panel compiler can validate file ownership and produce task-ready prompts with exact hunks and the strict output schema.
 
-
 ## 5. Start the panel
 
 Apply the mode-to-profile routing in [`model-policy.md`](model-policy.md) before fan-out.
@@ -128,7 +125,6 @@ Do not merge or rerank findings across reviewers.
 Follow [`reporting.md`](reporting.md) for the deterministic overall verdict, risk band, merge readiness, and final report.
 Use the deterministic aggregator to validate result structure and verdict consistency, count findings, and apply the fixed verdict, risk, and merge-readiness rules.
 Treat `valid: false` as a failed reviewer result; do not repair it into an accepted shape.
-
 
 Use the immutable snapshot command only when exact-head runtime validation adds evidence beyond the available checks.
 It extracts the pinned PR head outside git and must be removed after validation.
