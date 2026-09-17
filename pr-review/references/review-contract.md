@@ -82,6 +82,8 @@ Do not reassess repository style or requirement coverage on this axis. Report de
 
 ## Output
 
+Enforce [`../schemas/reviewer-result.schema.json`](../schemas/reviewer-result.schema.json) as the strict invocation-level output schema; this prose shape does not replace runner enforcement.
+
 Return exactly this shape:
 
 ```json

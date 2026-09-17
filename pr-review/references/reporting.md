@@ -4,9 +4,9 @@ Use these rules after every reviewer returns a structured result.
 
 ## Reviewer results
 
-Validate every result against the exact schema in [`review-contract.md`](review-contract.md).
+Validate every result structurally against [`../schemas/reviewer-result.schema.json`](../schemas/reviewer-result.schema.json), then semantically against [`review-contract.md`](review-contract.md).
 Each result must include the reviewer name, exact files, verdict, confidence, observed runtime fields, and grounded findings.
-Reject a result that omits assigned files, uses an unsupported verdict or severity, or reports inferred runtime values.
+Reject a result that omits assigned files, uses an unsupported verdict or severity, reports inferred runtime values, or arrives in an agent-specific wrapper.
 
 `confidence` is the reviewer's own estimate that its verdict is right.
 It is not a calibrated quality score.
