@@ -10,6 +10,7 @@ The harness needs:
 1. A way to run independent reviewers in parallel.
 2. A PR resolver or git access that can produce the complete diff.
 3. The model control described in [`model-policy.md`](model-policy.md).
+4. Invocation-level JSON Schema enforcement for verdict-bearing task results.
 
 If parallel agents are unavailable, run the same reviewers sequentially and keep the report contract unchanged.
 
@@ -93,13 +94,14 @@ Do not let reviewers edit files, run formatters, run tests, or write to git.
 
 Apply the mode-to-profile routing in [`model-policy.md`](model-policy.md) before fan-out.
 Use the Review profile for `locality`, `standards-only`, and `spec-only`; use the Deep review profile for `architecture-only`.
+On Oh My Pi, dispatch ordinary modes with the bundled `reviewer` agent and `architecture-only` with the bundled `task` agent configured in [`model-policy.md`](model-policy.md).
 Set each reviewer model and effort explicitly when the runner exposes those controls.
 For Oh My Pi, pass the high `effort` value when the task schema exposes it.
 Otherwise use the configured role profiles and report unavailable runtime evidence as `not exposed`.
 Never change the user's model configuration during a review.
 
 Load [`../schemas/reviewer-result.schema.json`](../schemas/reviewer-result.schema.json) once.
-When the runner supports invocation-level schemas, pass it as every verdict task's output schema and enable strict validation.
+Pass it as every verdict task's invocation-level output schema and enable strict validation.
 Prompt text is not schema enforcement: override any agent-default result schema rather than accepting a different shape.
 
 Start every reviewer, including the conditional Architecture & DDD reviewer, in one fan-out call.

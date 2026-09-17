@@ -91,13 +91,14 @@ The skill keeps its trigger file concise and loads focused references only when 
 ## Requirements
 
 This is a **methodology packaged as instructions**, not a standalone program.
-The agent harness needs three review capabilities:
+The agent harness needs four review capabilities:
 
 1. **Parallel subagents**: a way to start N background reviewers in one fan-out, such as Oh My Pi's `task` tool or another concurrent subagent runner.
    Without parallel execution, the reviewers may run sequentially and produce the same report more slowly.
 2. **Diff access**: either a PR resolver such as `pr://<owner>/<repo>/<n>/diff/all` or plain `git diff <base>...<target>`.
 3. **Capability-based model control**: the orchestrator uses the strongest general reasoning profile, ordinary verdict axes use a strong long-context review profile, and Architecture & DDD uses the deepest review profile.
    Model names are installation-specific; per-agent settings are preferred, and compliant inheritance is acceptable when it meets the required capability.
+4. **Invocation-level schema enforcement**: a way to apply [`reviewer-result.schema.json`](pr-review/schemas/reviewer-result.schema.json) as each verdict task's strict output schema and reject structurally invalid results before aggregation.
 
 Publishing the optional PR comment also needs an authenticated, write-capable GitHub client such as `gh`.
 Without it, the gitkeeper returns the complete draft without changing GitHub.
