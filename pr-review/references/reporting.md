@@ -55,7 +55,7 @@ Always report `Merge-ready: Yes` or `Merge-ready: No` with the aggregator's `mer
 Write the report for the developer who must act on it:
 
 1. Start with `## Change summary`: two to five diff-grounded bullets.
-2. State the decomposition and architecture-gate result with one concrete reason each.
+2. State the selected review depth, decomposition, and architecture-gate result with one concrete reason each.
 3. Add `## Required changes` when blocker or major findings exist. Render each as one checklist item with its linked location, summary, evidence and consequence, then its exact fix. Order by severity, then source order.
 4. Add `## Non-blocking suggestions` only when minor or nit findings exist. Use the same compact action shape without checkboxes.
 5. Add `## Areas worth human inspection`: two to five changed functions, scripts, or sections with a concrete reason. Do not repeat a finding without adding a distinct inspection concern.

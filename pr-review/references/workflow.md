@@ -80,7 +80,7 @@ Apply the gate in [`architecture-review.md`](architecture-review.md) after readi
 
 For a `run`, gather the architecture and domain context that governs those hunks: architecture decisions, ADRs, module maps, and domain glossaries. If present, use `CONTEXT-MAP.md` to locate each changed area's `CONTEXT.md`. Read applicable sources at the target revision and provide complete content or immutable target-revision URLs in the Architecture & DDD brief.
 
-Record the selected depth, decomposition, architecture-gate result, and reasons for the review environment section.
+Record the selected review depth, decomposition, architecture-gate result, and their reasons in the developer report location defined by [`reporting.md`](reporting.md#developer-report).
 
 ## 4. Build reviewer briefs
 
