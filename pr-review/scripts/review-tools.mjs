@@ -583,7 +583,16 @@ export const compilePanel = async ({ evidence, plan }) => {
   if (typeof plan.fullDiffUri !== 'string' || !plan.fullDiffUri) {
     throw new Error('Panel plan must provide fullDiffUri')
   }
-
+  const reviewDepth = plan.reviewDepth ?? 'fast'
+  if (!['fast', 'thorough'].includes(reviewDepth)) {
+    throw new Error(`Unsupported review depth ${reviewDepth}`)
+  }
+  const maximumReviewers = reviewDepth === 'fast' ? 3 : 6
+  if (plan.reviewers.length > maximumReviewers) {
+    throw new Error(
+      `${reviewDepth} review supports at most ${maximumReviewers} verdict-bearing reviewers`
+    )
+  }
 
   const changedFiles = evidence.diff.files.map((file) => file.path)
   const changedFileSet = new Set(changedFiles)
@@ -701,7 +710,7 @@ Return exactly the reviewer result contract. Use name ${JSON.stringify(reviewer.
     }
   })
 
-  return { pinned, reviewers }
+  return { pinned, reviewDepth, reviewers }
 }
 
 const validateJsonSchema = (value, schema, location, errors) => {
@@ -846,11 +855,14 @@ export const aggregateReview = (input) => {
     ['pending', 'not-run'].includes(item.status)
   )
   const spec = input.spec ?? { status: 'unavailable', behaviorChanging: true }
+  const specComplete =
+    ['reviewed', 'not-needed'].includes(spec.status) ||
+    (spec.status === 'unavailable' && spec.behaviorChanging === false)
   const architecture = input.architecture ?? {
     gate: 'skip',
     reviewed: false
   }
-  let mergeRisk
+  let mergeStatus
   let decidingRule
 
   if (
@@ -861,49 +873,93 @@ export const aggregateReview = (input) => {
     failedValidation ||
     input.securityOrDataLossRisk === true
   ) {
-    mergeRisk = 'RED'
-    decidingRule = 'A reviewer requested changes, a major risk remains, or required validation failed.'
+    mergeStatus = 'RED'
+    if (
+      overallVerdict === 'request-changes' ||
+      counts.blocker > 0 ||
+      counts.major > 0
+    ) {
+      decidingRule = 'A reviewer requested changes or a blocker or major finding remains.'
+    } else if (checks.state === 'failure' || failedValidation) {
+      decidingRule = 'Required validation failed.'
+    } else {
+      decidingRule = 'A security or data-loss risk remains.'
+    }
   } else if (
     validationErrors.length > 0 ||
     input.criticalScopeReviewed === false ||
     input.conflictingEvidence === true ||
     (architecture.gate === 'run' && architecture.reviewed !== true)
   ) {
-    mergeRisk = 'GRAY'
-    decidingRule = 'A reviewer result was invalid, critical scope was not reviewed, or evidence conflicts.'
+    mergeStatus = 'GRAY'
+    if (validationErrors.length > 0) {
+      decidingRule = 'A reviewer result was invalid.'
+    } else if (input.criticalScopeReviewed === false) {
+      decidingRule = 'Critical scope was not reviewed.'
+    } else if (input.conflictingEvidence === true) {
+      decidingRule = 'Review evidence conflicts.'
+    } else {
+      decidingRule = 'The required Architecture & DDD review did not run.'
+    }
   } else if (
     counts.minor > 0 ||
     counts.nit > 0 ||
     checks.state === 'pending' ||
     incompleteValidation ||
-    (spec.status === 'unavailable' && spec.behaviorChanging === true)
+    !specComplete
   ) {
-    mergeRisk = 'AMBER'
-    decidingRule =
-      spec.status === 'unavailable' && spec.behaviorChanging === true
-        ? 'The Spec axis was unavailable for a behavior-changing change.'
-        : 'Non-blocking findings or relevant validation remain.'
+    mergeStatus = 'AMBER'
+    if (!specComplete) {
+      decidingRule =
+        spec.status === 'unavailable' && spec.behaviorChanging === true
+          ? 'The Spec axis was unavailable for a behavior-changing change.'
+          : 'The Spec axis did not run and was not marked not-needed.'
+    } else if (checks.state === 'pending' || incompleteValidation) {
+      decidingRule = 'Relevant validation is pending or did not run.'
+    } else {
+      decidingRule = 'Non-blocking findings remain.'
+    }
   } else {
-    mergeRisk = 'GREEN'
+    mergeStatus = 'GREEN'
     decidingRule = 'Every reviewer approved and all applicable review and validation evidence is complete.'
   }
 
   const mergeReady =
-    !['RED', 'GRAY'].includes(mergeRisk) &&
+    !['RED', 'GRAY'].includes(mergeStatus) &&
     !['failure', 'pending'].includes(checks.state) &&
     !failedValidation &&
     !incompleteValidation &&
-    ['reviewed', 'not-needed'].includes(spec.status) &&
+    specComplete &&
     (architecture.gate === 'skip' || architecture.reviewed === true)
+
+  let mergeReadyReason
+  if (mergeReady) {
+    mergeReadyReason =
+      counts.minor > 0 || counts.nit > 0
+        ? 'Only non-blocking findings remain; required review and validation evidence is complete.'
+        : 'Required review and validation evidence is complete.'
+  } else if (mergeStatus === 'RED') {
+    mergeReadyReason =
+      'Blocking findings, risks, or failed validation must be resolved before merge.'
+  } else if (mergeStatus === 'GRAY') {
+    mergeReadyReason = 'Review evidence is invalid, incomplete, or conflicting.'
+  } else if (checks.state === 'pending' || incompleteValidation) {
+    mergeReadyReason = 'Relevant validation is pending or did not run.'
+  } else if (!specComplete) {
+    mergeReadyReason = 'The Spec axis did not run and was not marked not-needed.'
+  } else {
+    mergeReadyReason = 'Required review evidence is incomplete.'
+  }
 
   return {
     valid: validationErrors.length === 0,
     validationErrors,
     overallVerdict,
     findings: counts,
-    mergeRisk,
+    mergeStatus,
     decidingRule,
     mergeReady,
+    mergeReadyReason,
     reviewers: reviewerResults
   }
 }

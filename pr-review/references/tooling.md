@@ -88,11 +88,12 @@ Local evidence uses `range` instead of `pullRequest`.
 
 ## Compile a panel
 
-The orchestrator still chooses the decomposition, modes, files, specification, and architecture context.
-Write those decisions as a plan:
+The orchestrator still chooses the review depth, decomposition, modes, files, specification, and architecture context.
+Write those decisions as a plan. `reviewDepth` defaults to `fast`; set `thorough` only when the user explicitly requested it.
 
 ```json
 {
+  "reviewDepth": "fast",
   "fullDiffUri": "pr://OWNER/REPO/123/diff/all",
   "specification": {
     "path": "issue://OWNER/REPO/99",
@@ -130,11 +131,13 @@ node scripts/review-tools.mjs compile-panel \
 
 The compiler:
 
+- defaults to fast depth and rejects more than three verdict-bearing reviewers;
+- permits up to six reviewers only for an explicitly thorough plan;
 - rejects unknown files and incomplete whole-diff axes;
 - requires every changed file to have exactly one locality owner when locality mode is used;
 - requires a specification for `spec-only` and architecture context for `architecture-only`;
 - embeds each reviewer's exact diff hunks and applicable sources;
-- returns `profile`, `task`, `outputSchema`, and `schemaMode: "strict"` for each reviewer.
+- returns `reviewDepth`, `profile`, `task`, `outputSchema`, and `schemaMode: "strict"`.
 
 The orchestrator maps `profile` to the runner configuration and starts the returned reviewers in one fan-out.
 
@@ -171,8 +174,8 @@ node scripts/review-tools.mjs aggregate \
   --out /tmp/pr-review-aggregate.json
 ```
 
-The aggregator validates structure and verdict/finding consistency, preserves reviewer results, counts severities, applies the fixed verdict and risk rules, and returns merge readiness with one deciding rule.
-It does not merge, deduplicate, rerank, or rewrite findings.
+The aggregator validates structure and verdict/finding consistency, preserves reviewer results, counts severities, applies the fixed verdict and status rules, and returns `mergeStatus` with its `decidingRule` plus `mergeReady` with its independent `mergeReadyReason`.
+It does not merge, deduplicate, rerank, or rewrite findings; the developer report may consolidate only exact duplicates while retaining their provenance.
 A malformed reviewer result produces `GRAY` and `valid: false`; it is never translated into the expected schema.
 
 ## Materialize an immutable target

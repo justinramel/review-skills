@@ -1,19 +1,26 @@
 # review-skills
 
-Agent skills for reviewing pull requests with a **panel of independent reviewers running in parallel**, optionally including an Architecture & DDD axis when the diff warrants it. Reports lead with evidence and end with the verdict table plus a coloured merge-risk band.
+Agent skills for fast, parallel pull-request review with an optional Architecture & DDD axis. Reports keep actionable developer findings near the evidence and end with the reviewer table plus a deterministic merge-status band.
 
+```markdown
+## Required changes
+
+- [ ] **Prevent inherited Inbox handler lookup** - [`InboxSubscriber.handleEvent`](https://github.com/OWNER/REPO/blob/HEAD_SHA/src/inbox.subscriber.js#L165-L168)
+  Use an own-property-safe dispatch map so an event type such as `toString` cannot be marked complete without being handled.
+
+## Verdict and merge status
+
+Overall verdict: request-changes - 0 blockers, 1 major, 0 minor, 0 nits.
+Merge-ready: No - Blocking findings, risks, or failed validation must be resolved before merge.
+
+| Review area | Files | Verdict | Findings |
+|---|---|---|---:|
+| Inbox lifecycle | 6 files | request-changes | 1 major |
+
+🔴 RED - A reviewer requested changes or a blocker or major finding remains.
 ```
-| Agent | Files | Verdict | Confidence (self-estimate) |
-|---|---|---|---|
-| ConfigInfra     | .env.example, config.ts, vitest.config.ts   | approve | 0.95 |
-| RedriveFlash    | redrive-event.route.ts + test               | approve | 0.98 |
-| EventPageView   | event-page.view-model.ts + test, ...        | approve | 0.96 |
-| EventsListLinks | events-page.view-model.ts + test            | approve | 0.91 |
 
-🟢 GREEN - all reviewers approved, intended scope was covered, and every applicable check passed or no applicable automated validation existed.
-```
-
-Each reviewer starts with fresh context and owns one slice of the change, so independent slices are reviewed at the same time and no reviewer's context pollutes another's.
+Each reviewer starts with fresh context and owns one concern or review axis. Fast depth is the default and limits the panel to three verdict-bearing reviewers, including the conditional Architecture & DDD axis.
 
 ## Install
 
@@ -30,6 +37,8 @@ Then just ask your agent to review a PR:
 ```
 review https://github.com/OWNER/REPO/pull/123
 ```
+
+Reviews use fast depth by default. Ask `review thoroughly ...` to permit a panel of up to six reviewers.
 
 Skill selection uses the harness's installed skill registry; a repository clone alone may not register `pr-review`.
 Start a new agent session after installation and confirm that `pr-review` is available.
@@ -74,12 +83,12 @@ Setup and ticket fetching require `curl` and `jq`.
 
 | Skill | What it does |
 |---|---|
-| [`pr-review`](pr-review/SKILL.md) | Parallel PR review with locality or Standards/Spec decomposition, a conditional Architecture & DDD reviewer, a deterministic merge-risk band, and an optional developer-facing PR comment. |
+| [`pr-review`](pr-review/SKILL.md) | Fast-by-default parallel review with locality or Standards/Spec decomposition, a conditional Architecture & DDD reviewer, deterministic merge status, and an optional developer-facing PR comment. |
 
 The skill keeps its trigger file concise and loads focused references only when needed:
 
 - [`workflow.md`](pr-review/references/workflow.md) defines target pinning, evidence gathering, decomposition, reviewer briefs, and publication.
-- [`reporting.md`](pr-review/references/reporting.md) defines structured results, deterministic aggregation, merge risk, merge readiness, and report order.
+- [`reporting.md`](pr-review/references/reporting.md) defines structured results, deterministic aggregation, merge status, merge readiness, and the developer report.
 - [`reviewer-role.md`](pr-review/references/reviewer-role.md) defines reviewer scope and behavior.
 - [`review-contract.md`](pr-review/references/review-contract.md) defines smells, severity, verdicts, runtime evidence, and structured output.
 - [`model-policy.md`](pr-review/references/model-policy.md) defines model selection, reasoning effort, and OMP configuration.
@@ -109,17 +118,11 @@ Without it, the gitkeeper returns the complete draft without changing GitHub.
 
 The model policy is capability-based and does not require a specific model provider.
 
-## About the confidence column
-
-`confidence` is each reviewer's **own estimate that its verdict is right**, given how much context it could see.
-It is a self-reported number, **not a calibrated metric** - useful for spotting where a reviewer was unsure, not as a quality score.
-The skill labels it as a self-estimate wherever it is reported.
-
 ## Lineage
 
 The two-axis (Standards + Spec) split and the Fowler code-smell baseline are long-standing ideas - the smells are from Martin Fowler's _Refactoring_ (ch. 3), and a similar two-axis skill ships in [Matt Pocock's skills](https://github.com/mattpocock/skills).
 The conditional architecture lens uses deep-module and seam vocabulary alongside pragmatic DDD checks; it does not require tactical DDD patterns.
-This repo's contribution is the **parallel locality panel**, conditional Architecture & DDD axis, and the **verdict + confidence table** as a reporting contract, plus a single reviewer contract shared across whichever decomposition you pick.
+This repo's contribution is the fast-by-default parallel locality panel, conditional Architecture & DDD axis, deterministic merge status, and actionable developer report, plus a single reviewer contract shared across whichever decomposition you pick.
 
 ## License
 

@@ -1,7 +1,7 @@
 ---
 name: pr-review
 description: >-
-  PR review with parallel independent reviewers, a conditional Architecture & DDD axis, evidence-first findings, confidence, verdicts, and merge risk.
+  Fast-by-default PR review with parallel independent reviewers, a conditional Architecture & DDD axis, actionable developer findings, and deterministic merge status.
   MUST use for a GitHub pull-request URL, "review PR", "review since <ref>", or a request to publish a completed review as a PR comment.
 ---
 
@@ -26,14 +26,14 @@ A plain review request never authorizes publication.
 1. Read [`references/model-policy.md`](references/model-policy.md), use the Review profile for ordinary verdict axes, the Deep review profile for Architecture & DDD, and the Publication profile for Gitkeeper.
 2. Pin the declared base and target, preferably with the bundled evidence collector, and capture the complete diff, commit messages, standards candidates, spec candidates, and current checks.
 3. Gather repository standards and the first available spec source.
-4. Choose locality decomposition by default, or use the two-axis panel for a focused change with a spec.
-5. Apply the architecture gate; only when it selects `run`, gather architecture and domain context and add an Architecture & DDD reviewer.
+4. Use the fast review depth unless the user explicitly requests a thorough review. Choose locality decomposition for changes spanning concerns, or use the two-axis panel for a focused change with a spec.
+5. Apply the architecture gate; only when it selects `run`, gather architecture and domain context and reserve one fast-panel slot for an Architecture & DDD reviewer.
 6. Compile task-ready briefs when the tool is available, then start every reviewer in one fan-out with its exact mode, scope, hunks, applicable standards, spec, review references, and strict schema.
-7. Enforce [`schemas/reviewer-result.schema.json`](schemas/reviewer-result.schema.json) at invocation time, validate each result semantically, then aggregate without merging or reranking findings.
+7. Enforce [`schemas/reviewer-result.schema.json`](schemas/reviewer-result.schema.json) at invocation time, validate each result semantically, then aggregate without losing finding provenance.
 8. Publish through the Gitkeeper only when the user explicitly authorized an external change.
 
-Follow the complete orchestration procedure in [`references/workflow.md`](references/workflow.md).
-Use [`references/reporting.md`](references/reporting.md) for deterministic verdict, risk, merge-readiness, and report rules.
+Follow the complete fast-by-default orchestration procedure in [`references/workflow.md`](references/workflow.md).
+Use [`references/reporting.md`](references/reporting.md) for deterministic verdict, merge status, merge readiness, and the developer report.
 
 ## Review modes
 

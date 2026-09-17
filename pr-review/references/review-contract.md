@@ -91,22 +91,23 @@ Return exactly this shape:
   "name": "<your bucket name>",
   "files": ["<file>", "..."],
   "verdict": "approve | approve-with-nits | request-changes",
-  "confidence": 0.0,
   "runtime": {
     "model": "<exact model identifier | not exposed>",
     "effort": "<exact reasoning level | not exposed>"
   },
   "findings": [
-    { "severity": "blocker|major|minor|nit",
+    {
+      "severity": "blocker|major|minor|nit",
       "location": "path:line",
-      "evidence": "what is wrong and why, grounded in the hunk" }
+      "summary": "short developer-facing defect title",
+      "evidence": "observed failure and consequence, grounded in the hunk",
+      "fix": "smallest correction and observable completion condition"
+    }
   ]
 }
 ```
 
-`confidence` is a number in `[0, 1]`: **your own estimate that your verdict is right**, given how much of the context you could see.
-It is a self-estimate, not a calibrated score.
-Lower it when you had to guess at cross-file behaviour the diff didn't show.
+Every finding must be ready to render as a developer action without reinterpretation. Keep `summary` short, put the concrete failure and consequence in `evidence`, and make `fix` specific enough to tell when the problem is resolved.
 
 Report the exact runtime model and reasoning effort only when the runtime exposes them to you.
 Never infer either value from the brief, configured policy, or model name.

@@ -21,34 +21,35 @@ Never invent a failure, example, path, line number, check result, or author inte
 
 ## Comment
 
-Write one top-level comment in this order:
-
-1. `## Review summary`
-   Give two to five short bullets that describe the actual changes.
-2. `## Findings`
-   Put blocking findings first.
-   Preserve severity, path, line, and consequence.
-   Add a small input or code example only when it makes the problem or fix clearer.
-3. `## Worth a closer look`
-   Preserve the report's Areas to inspect and explain why each section matters.
-4. `## Validation`
-   State the checks that were observed.
-   Say plainly when tests, runtime verification, or the Spec axis did not run, and state the Architecture & DDD gate result.
-5. `## Merge risk`
-   Preserve the report's exact coloured risk marker and band, and explain the deciding reason in one sentence. Keep this as the final section.
-
 Begin the body with this marker:
 
 ```html
 <!-- pr-review-skill -->
 ```
 
+Then write one top-level developer report in this order:
+
+1. `## Review summary`
+   Give two to five short bullets grounded in the diff.
+2. `## Required changes`
+   When blocker or major findings exist, render each as a checklist item with its linked location, consequence, and exact fix.
+3. `## Non-blocking suggestions`
+   Include only when minor or nit findings exist.
+4. `## Worth a closer look`
+   Include changed areas that warrant human attention without repeating findings.
+5. `## Validation`
+   State the pinned target and observed checks. Say plainly when tests, runtime verification, or the Spec axis did not run and record the Architecture & DDD gate result.
+6. `## Verdict and merge status`
+   Preserve the overall verdict, finding counts, explicit `Merge-ready: Yes|No` decision, reviewer table, and exact GREEN, AMBER, RED, or GRAY deciding reason. Keep the coloured status as the final line.
+
+Omit empty sections.
+Except for the required `<!-- pr-review-skill -->` marker, use Markdown headings, prose, bullets or checklists, links, and tables. Never wrap comment content in HTML or disclosure tags.
 Write like a teammate speaking to the developer who will act on the review.
 Use short, direct sentences.
 Prefer concrete consequences and fixes over review jargon.
 Use plain hyphens and straight quotes.
-Do not use em dashes, curly quotes, empty praise, model details, agent names, confidence scores, or internal workflow notes.
-Do not turn an `approve` verdict into praise or soften a `request-changes` verdict.
+Keep model details, agent names, review-depth mechanics, and internal workflow notes out of the comment.
+Preserve every finding's severity and meaning. Do not turn an `approve` verdict into praise or soften a `request-changes` verdict.
 
 ## Publication safety
 
