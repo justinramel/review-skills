@@ -69,11 +69,11 @@ task:
   enableEffort: true
   agentModelOverrides:
     reviewer: "@review"
+    task: "@deepReview"
     sonic: "@economy"
 ```
 
-Use the bundled `reviewer` agent for Review work and an agent mapped to `@deepReview` for Deep review work.
-Use the mechanical `sonic` agent for Gitkeeper when it can access the required GitHub tools.
+Use the bundled `reviewer` agent for Review work, the bundled `task` agent for Deep review work, and the bundled `sonic` agent for Gitkeeper when it has the required GitHub tools.
 If the task schema exposes `effort`, request its high setting for verdict-bearing reviewers and its low setting for Gitkeeper.
 
 ## Unavailable settings
