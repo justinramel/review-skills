@@ -45,11 +45,26 @@ const approveResult = {
   findings: []
 }
 
+const approvePanelResults = [
+  approveResult,
+  { ...approveResult, name: 'Spec' },
+  { ...approveResult, name: 'Architecture & DDD' }
+]
+
 const evidenceFixture = () => ({
   pullRequest: {
+    url: 'https://github.com/acme/widget/pull/7',
+    title: 'Preserve widget requests',
+    body: 'The changed handler must forward every widget request.',
     baseSha: 'base-sha',
     headSha: 'head-sha'
   },
+  commits: [
+    {
+      sha: 'head-sha',
+      message: 'Preserve widget requests'
+    }
+  ],
   diff: {
     raw: sampleDiff,
     files: parseDiff(sampleDiff, {
@@ -235,101 +250,70 @@ test('collects a local range from committed revisions', async (t) => {
   assert.equal(evidence.standards[0].path, 'README.md')
 })
 
-test('compiles task-ready reviewer briefs with strict schema', async () => {
+test('compiles the fixed Standards, Spec, and Architecture panel', async () => {
   const evidence = evidenceFixture()
   const panel = await compilePanel({
     evidence,
     plan: {
-      fullDiffUri: 'pr://acme/widget/7/diff/all',
-      reviewers: [
+      specification: {
+        path: 'issue://acme/widget/6',
+        content: 'Forward every widget request.'
+      },
+      architectureContext: [
         {
-          name: 'Standards',
-          mode: 'standards-only',
-          files: ['src/app.ts', 'src/new.ts']
+          path: 'docs/architecture.md',
+          content: 'Handlers own request forwarding.'
         }
       ]
     }
   })
 
-  assert.equal(panel.reviewers[0].profile, 'review')
+  assert.deepEqual(
+    panel.reviewers.map(({ name, mode, profile }) => ({ name, mode, profile })),
+    [
+      { name: 'Standards', mode: 'standards-only', profile: 'review' },
+      { name: 'Spec', mode: 'spec-only', profile: 'review' },
+      {
+        name: 'Architecture & DDD',
+        mode: 'architecture-only',
+        profile: 'deep-review'
+      }
+    ]
+  )
   assert.equal(panel.reviewers[0].schemaMode, 'strict')
   assert.equal(panel.reviewers[0].outputSchema.additionalProperties, false)
-  assert.equal(panel.reviewDepth, 'fast')
   assert.equal(
     Object.hasOwn(panel.reviewers[0].outputSchema.properties, 'confidence'),
     false
   )
-  assert.match(panel.reviewers[0].task, /Exact assigned diff hunks/)
+  for (const reviewer of panel.reviewers) {
+    assert.deepEqual(reviewer.files, ['src/app.ts', 'src/new.ts'])
+    assert.match(reviewer.task, /Exact complete diff/)
+    assert.match(reviewer.task, /src\/new\.ts/)
+  }
   assert.match(panel.reviewers[0].task, /Use boring TypeScript/)
-  assert.match(panel.reviewers[0].task, /src\/new\.ts/)
+  assert.match(panel.reviewers[1].task, /Forward every widget request/)
+  assert.match(panel.reviewers[2].task, /Handlers own request forwarding/)
 })
 
-test('defaults to a three-reviewer fast panel and requires explicit thorough depth', async () => {
+test('uses declared intent as the Spec fallback and rejects custom panels', async () => {
   const evidence = evidenceFixture()
-  const reviewers = ['First', 'Second', 'Third', 'Fourth'].map((name) => ({
-    name,
-    mode: 'standards-only',
-    files: ['src/app.ts', 'src/new.ts']
-  }))
+  const panel = await compilePanel({ evidence })
 
-  await assert.rejects(
-    compilePanel({
-      evidence,
-      plan: {
-        fullDiffUri: 'pr://acme/widget/7/diff/all',
-        reviewers
-      }
-    }),
-    /fast review supports at most 3 verdict-bearing reviewers/
+  assert.match(
+    panel.reviewers.find(({ name }) => name === 'Spec').task,
+    /The changed handler must forward every widget request/
   )
-
-  const panel = await compilePanel({
-    evidence,
-    plan: {
-      reviewDepth: 'thorough',
-      fullDiffUri: 'pr://acme/widget/7/diff/all',
-      reviewers
-    }
-  })
-
-  assert.equal(panel.reviewDepth, 'thorough')
-  assert.equal(panel.reviewers.length, 4)
-})
-
-test('rejects incomplete panel ownership and missing axis context', async () => {
-  const evidence = evidenceFixture()
-
-  await assert.rejects(
-    compilePanel({
-      evidence,
-      plan: {
-        fullDiffUri: 'pr://acme/widget/7/diff/all',
-        reviewers: [
-          {
-            name: 'Standards',
-            mode: 'standards-only',
-            files: ['src/app.ts']
-          }
-        ]
-      }
-    }),
-    /must own the whole diff/
+  assert.match(
+    panel.reviewers.find(({ name }) => name === 'Architecture & DDD').task,
+    /No repository-specific architecture context was found/
   )
   await assert.rejects(
     compilePanel({
       evidence,
-      plan: {
-        fullDiffUri: 'pr://acme/widget/7/diff/all',
-        reviewers: [
-          {
-            name: 'Spec',
-            mode: 'spec-only',
-            files: ['src/app.ts', 'src/new.ts']
-          }
-        ]
-      }
+      plan: { reviewers: [] }
     }),
-    /has no specification/
+    /unsupported keys: reviewers/
   )
 })
 
@@ -398,44 +382,25 @@ test('validates reviewer semantics and rejects agent wrappers', () => {
   )
 })
 
-test('aggregates green, amber, red, and gray outcomes', () => {
+test('aggregates fixed-panel green, red, and gray outcomes', () => {
   const complete = {
-    reviewers: [approveResult],
+    reviewers: approvePanelResults,
     checks: { state: 'success', runs: [] },
-    spec: { status: 'reviewed', behaviorChanging: true },
-    architecture: { gate: 'skip', reviewed: false },
     validation: [{ name: 'CI', status: 'passed' }]
   }
 
+  const green = aggregateReview(complete)
   assert.deepEqual(
     {
-      status: aggregateReview(complete).mergeStatus,
-      ready: aggregateReview(complete).mergeReady
-    },
-    { status: 'GREEN', ready: true }
-  )
-  const withoutBehaviorSpec = aggregateReview({
-    ...complete,
-    spec: { status: 'unavailable', behaviorChanging: false }
-  })
-  assert.deepEqual(
-    {
-      status: withoutBehaviorSpec.mergeStatus,
-      ready: withoutBehaviorSpec.mergeReady,
-      readinessReason: withoutBehaviorSpec.mergeReadyReason
+      status: green.mergeStatus,
+      ready: green.mergeReady,
+      readinessReason: green.mergeReadyReason
     },
     {
       status: 'GREEN',
       ready: true,
-      readinessReason: 'Required review and validation evidence is complete.'
+      readinessReason: 'The fixed panel and required validation are complete.'
     }
-  )
-  assert.equal(
-    aggregateReview({
-      ...complete,
-      spec: { status: 'unavailable', behaviorChanging: true }
-    }).mergeStatus,
-    'AMBER'
   )
   assert.equal(
     aggregateReview({
@@ -444,21 +409,32 @@ test('aggregates green, amber, red, and gray outcomes', () => {
     }).mergeStatus,
     'RED'
   )
-  assert.equal(
-    aggregateReview({
-      ...complete,
-      reviewers: [{ overall_correctness: 'correct' }]
-    }).mergeStatus,
-    'GRAY'
+
+  const incompletePanel = aggregateReview({
+    ...complete,
+    reviewers: [approveResult]
+  })
+  assert.equal(incompletePanel.mergeStatus, 'GRAY')
+  assert.match(
+    incompletePanel.validationErrors.join('\n'),
+    /exactly one Spec result|exactly one Architecture & DDD result/
+  )
+
+  const unsupportedAggregationInput = aggregateReview({
+    ...complete,
+    extraContext: true
+  })
+  assert.equal(unsupportedAggregationInput.mergeStatus, 'GRAY')
+  assert.match(
+    unsupportedAggregationInput.validationErrors.join('\n'),
+    /unsupported keys: extraContext/
   )
 })
 
 test('explains whether amber outcomes are merge-ready', () => {
   const complete = {
-    reviewers: [approveResult],
+    reviewers: approvePanelResults,
     checks: { state: 'success', runs: [] },
-    spec: { status: 'reviewed', behaviorChanging: true },
-    architecture: { gate: 'skip', reviewed: false },
     validation: [{ name: 'CI', status: 'passed' }]
   }
   const minorResult = {
@@ -477,7 +453,7 @@ test('explains whether amber outcomes are merge-ready', () => {
 
   const withMinorFinding = aggregateReview({
     ...complete,
-    reviewers: [minorResult]
+    reviewers: [minorResult, ...approvePanelResults.slice(1)]
   })
   assert.deepEqual(
     {
@@ -491,7 +467,7 @@ test('explains whether amber outcomes are merge-ready', () => {
       statusReason: 'Non-blocking findings remain.',
       ready: true,
       readinessReason:
-        'Only non-blocking findings remain; required review and validation evidence is complete.'
+        'Only non-blocking findings remain; the fixed panel and required validation are complete.'
     }
   )
 

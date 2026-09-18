@@ -1,16 +1,16 @@
 # Review contract
 
-This is the rubric every reviewer applies.
-Pair it with the stance in [`reviewer-role.md`](reviewer-role.md): that file defines who you are and how you approach your assigned scope; this file defines what you check and return.
+You are an independent reviewer with fresh context; you did not write the code.
+Judge only your assigned axis from the complete diff and source material in the brief.
+Do not read the target's local working tree, assess another axis, edit files, run commands, or write to git.
 
 ## What to review
 
 The brief assigns exactly one review mode:
 
-- **`locality`**: review the assigned file slice on Standards and, when a spec was supplied, Spec.
 - **`standards-only`**: review the whole diff on Standards only.
 - **`spec-only`**: review the whole diff on Spec only.
-- **`architecture-only`**: review the architecture-relevant diff only through [`architecture-review.md`](architecture-review.md).
+- **`architecture-only`**: review the whole diff only through [`architecture-review.md`](architecture-review.md).
 
 Never run an axis the assigned mode excludes.
 
@@ -52,20 +52,27 @@ Tests get three smells of their own:
 
 ### Spec
 
-The linked issue / plan is the source of truth.
-Report, quoting the spec line:
+The supplied requirement source is the source of truth for this axis.
+Use Jira, a linked issue, or a user-supplied specification when available; otherwise use the labeled PR or commit-message declared-intent fallback.
+Report, quoting the applicable source line when one exists:
 
 - **Missing**: requested behaviour absent or partial.
 - **Creep**: behaviour or files nobody asked for.
 - **Wrong**: a requirement that looks implemented but whose behaviour does not hold up.
 
-If no spec was supplied, locality reviewers run Standards only and a two-axis panel omits the Spec-only reviewer.
+Declared intent is weaker than an external requirement. State that limitation in the report rather than skipping the Spec axis.
 
 ### Architecture and DDD
 
-This axis is conditional. The orchestrator applies the gate in [`architecture-review.md`](architecture-review.md); an `architecture-only` reviewer applies its Architecture lens and applies its DDD lens only to domain-bearing code. Repository architecture decisions take precedence over the general lens.
+This axis always runs over the complete diff. The `architecture-only` reviewer applies its Architecture lens and applies its DDD lens only to domain-bearing code. Repository architecture decisions take precedence over the general lens.
 
 Do not reassess repository style or requirement coverage on this axis. Report design problems only when the diff provides concrete evidence and a proportionate correction.
+
+## Findings
+
+Return a small number of actionable, high-conviction findings.
+Do not pad the result with cosmetic observations; an empty findings array is a valid approval.
+Every finding needs an exact changed location, concrete evidence and consequence, and the smallest verifiable fix.
 
 ## Severity
 
@@ -82,30 +89,7 @@ Do not reassess repository style or requirement coverage on this axis. Report de
 
 ## Output
 
-Enforce [`../schemas/reviewer-result.schema.json`](../schemas/reviewer-result.schema.json) as the strict invocation-level output schema; this prose shape does not replace runner enforcement.
-
-Return exactly this shape:
-
-```json
-{
-  "name": "<your bucket name>",
-  "files": ["<file>", "..."],
-  "verdict": "approve | approve-with-nits | request-changes",
-  "runtime": {
-    "model": "<exact model identifier | not exposed>",
-    "effort": "<exact reasoning level | not exposed>"
-  },
-  "findings": [
-    {
-      "severity": "blocker|major|minor|nit",
-      "location": "path:line",
-      "summary": "short developer-facing defect title",
-      "evidence": "observed failure and consequence, grounded in the hunk",
-      "fix": "smallest correction and observable completion condition"
-    }
-  ]
-}
-```
+Enforce [`../schemas/reviewer-result.schema.json`](../schemas/reviewer-result.schema.json) as the sole structural source of truth.
 
 Every finding must be ready to render as a developer action without reinterpretation. Keep `summary` short, put the concrete failure and consequence in `evidence`, and make `fix` specific enough to tell when the problem is resolved.
 

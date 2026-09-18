@@ -1,18 +1,11 @@
 # Architecture and DDD review
 
-Use this lens only when the workflow's architecture gate selects it. It is an independent review axis over the architecture-relevant diff, not a second Standards or Spec pass.
+Run this independent axis over the complete diff on every review.
+It is not a second Standards or Spec pass.
+When the change has no architecture or domain effect, return no findings rather than skipping the axis.
 
-## Architecture gate
-
-Run this axis when the diff does at least one of these:
-
-- changes domain concepts, business rules, invariants, state transitions, or domain events;
-- adds, removes, or changes a module interface, dependency direction, adapter seam, integration contract, persistence seam, or transaction boundary;
-- moves responsibility or dependencies across modules in a structural refactor.
-
-Skip it when the change preserves domain behaviour, interfaces, dependency direction, and module ownership. Typical skips are documentation, copy or styling, generated files, lockfiles, tool configuration, and an isolated leaf change behind an unchanged interface.
-
-Record `run` or `skip` and one concrete diff-grounded reason. File count alone never decides the gate.
+Use repository architecture decisions, ADRs, module maps, and domain glossaries when they exist.
+When none exist, apply the lens below directly and state that repository-specific architecture context was unavailable.
 
 ## Architecture lens
 
@@ -38,7 +31,3 @@ Apply this part only when the changed area expresses business concepts or the re
 - **Domain events**: events should describe domain facts, follow successful invariant enforcement, and have clear delivery and side-effect semantics when those matter to correctness.
 
 Prefer the smallest design correction that restores ownership or clarifies a seam. Do not demand aggregates, repositories, value objects, events, or layers merely because DDD names them.
-
-## Findings
-
-Report only actionable architecture or modelling problems introduced or materially exposed by the diff. Every finding needs an exact changed location, evidence, consequence, and fix direction. Use the shared severity, verdict, and JSON output contract. Return `Nothing found` through an empty findings array when the design is sound.
