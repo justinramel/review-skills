@@ -88,11 +88,11 @@ Local evidence uses `range` instead of `pullRequest`.
 
 ## Compile the fixed panel
 
-Write the complete diff URI and any explicit specification or architecture context as the plan:
+Compile directly from the evidence pack.
+When a stronger specification or repository-specific architecture context exists outside that pack, provide either or both in an optional plan:
 
 ```json
 {
-  "fullDiffUri": "pr://OWNER/REPO/123/diff/all",
   "specification": {
     "path": "issue://OWNER/REPO/99",
     "content": "Complete issue or ticket text"
@@ -114,16 +114,17 @@ Compile task-ready briefs:
 ```bash
 node scripts/review-tools.mjs compile-panel \
   --evidence /tmp/pr-review-evidence.json \
-  --plan /tmp/pr-review-plan.json \
   --out /tmp/pr-review-panel.json
 ```
+
+Add `--plan /tmp/pr-review-plan.json` only when supplying the optional sources above.
 
 The compiler:
 
 - creates exactly Standards, Spec, and Architecture & DDD reviewers;
 - assigns `standards-only`, `spec-only`, and `architecture-only` respectively;
 - gives every reviewer every changed file and the complete diff;
-- rejects custom reviewers, review depth, unknown plan fields, and incomplete inputs;
+- rejects custom reviewer configuration, unknown plan fields, and incomplete inputs;
 - uses declared PR or commit intent when no stronger specification is supplied;
 - embeds each reviewer's applicable sources;
 - returns `profile`, `task`, `outputSchema`, and `schemaMode: "strict"`.

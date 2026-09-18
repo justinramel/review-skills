@@ -11,7 +11,6 @@ You own one review axis over the complete diff: Standards, Spec, or Architecture
 
 Judge only your assigned axis, using the complete diff in your brief.
 Use the complete source material pasted into the brief and any immutable source URLs it explicitly permits you to read.
-Read the pinned full PR diff only for necessary cross-file context.
 Do not read the target's local working tree, assess another axis, re-run git, edit anything, run a formatter, or write to git.
 
 ## Apply the assigned review mode

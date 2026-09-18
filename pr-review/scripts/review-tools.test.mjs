@@ -255,7 +255,6 @@ test('compiles the fixed Standards, Spec, and Architecture panel', async () => {
   const panel = await compilePanel({
     evidence,
     plan: {
-      fullDiffUri: 'pr://acme/widget/7/diff/all',
       specification: {
         path: 'issue://acme/widget/6',
         content: 'Forward every widget request.'
@@ -299,12 +298,7 @@ test('compiles the fixed Standards, Spec, and Architecture panel', async () => {
 
 test('uses declared intent as the Spec fallback and rejects custom panels', async () => {
   const evidence = evidenceFixture()
-  const panel = await compilePanel({
-    evidence,
-    plan: {
-      fullDiffUri: 'pr://acme/widget/7/diff/all'
-    }
-  })
+  const panel = await compilePanel({ evidence })
 
   assert.match(
     panel.reviewers.find(({ name }) => name === 'Spec').task,
@@ -317,10 +311,7 @@ test('uses declared intent as the Spec fallback and rejects custom panels', asyn
   await assert.rejects(
     compilePanel({
       evidence,
-      plan: {
-        fullDiffUri: 'pr://acme/widget/7/diff/all',
-        reviewers: []
-      }
+      plan: { reviewers: [] }
     }),
     /unsupported keys: reviewers/
   )

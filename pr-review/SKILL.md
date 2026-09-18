@@ -53,7 +53,6 @@ Every verdict-bearing brief must include:
 - Available architecture context and [`references/architecture-review.md`](references/architecture-review.md) for Architecture & DDD.
 - [`references/reviewer-role.md`](references/reviewer-role.md) and [`references/review-contract.md`](references/review-contract.md).
 - The strict invocation-level schema in [`schemas/reviewer-result.schema.json`](schemas/reviewer-result.schema.json).
-- Permission to read the pinned full diff only for necessary cross-file context.
 
 Reviewers must not read the target's local working tree, edit files, run formatters, run tests, or write to git.
 

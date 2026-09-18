@@ -27,6 +27,17 @@ const requiredReviewerNames = new Set([
   'Spec',
   'Architecture & DDD'
 ])
+const allowedPanelOptionKeys = new Set([
+  'specification',
+  'architectureContext'
+])
+const allowedAggregationInputKeys = new Set([
+  'reviewers',
+  'checks',
+  'validation',
+  'conflictingEvidence',
+  'securityOrDataLossRisk'
+])
 const verdictOrder = new Map([
   ['approve', 0],
   ['approve-with-nits', 1],
@@ -571,19 +582,9 @@ const sourceText = (source) => {
   return `Source: ${label}\n${content}`
 }
 
-export const compilePanel = async ({ evidence, plan }) => {
-  if (!plan || typeof plan.fullDiffUri !== 'string' || !plan.fullDiffUri) {
-    throw new Error('Panel plan must provide fullDiffUri')
-  }
-
-  const allowedPlanKeys = new Set([
-    'fullDiffUri',
-    'standards',
-    'specification',
-    'architectureContext'
-  ])
+export const compilePanel = async ({ evidence, plan = {} }) => {
   const unsupportedPlanKeys = Object.keys(plan).filter(
-    (key) => !allowedPlanKeys.has(key)
+    (key) => !allowedPanelOptionKeys.has(key)
   )
   if (unsupportedPlanKeys.length > 0) {
     throw new Error(
@@ -599,7 +600,7 @@ export const compilePanel = async ({ evidence, plan }) => {
   const pinned = evidence.pullRequest
     ? `${evidence.pullRequest.baseSha}...${evidence.pullRequest.headSha}`
     : `${evidence.range.baseSha}...${evidence.range.headSha}`
-  const standards = (plan.standards ?? evidence.standards ?? [])
+  const standards = (evidence.standards ?? [])
     .map(sourceText)
     .join('\n\n')
   const declaredIntent = [
@@ -671,7 +672,6 @@ ${reviewer.context}
 
 # Change
 Follow skill://pr-review/references/reviewer-role.md and skill://pr-review/references/review-contract.md.
-Read the full diff only from ${plan.fullDiffUri} and only for necessary cross-file context.
 Do not read the target local working tree, edit files, run formatters, run builds, run linters, run tests, or write to git.
 Apply only the assigned review mode.
 
@@ -801,15 +801,8 @@ export const aggregateReview = (input) => {
   const reviewerResults = Array.isArray(input.reviewers) ? input.reviewers : []
   const validationErrors = []
   const reviewerNameCounts = new Map()
-  const allowedInputKeys = new Set([
-    'reviewers',
-    'checks',
-    'validation',
-    'conflictingEvidence',
-    'securityOrDataLossRisk'
-  ])
   const unsupportedInputKeys = Object.keys(input).filter(
-    (key) => !allowedInputKeys.has(key)
+    (key) => !allowedAggregationInputKeys.has(key)
   )
   if (unsupportedInputKeys.length > 0) {
     validationErrors.push(
@@ -1019,7 +1012,7 @@ const emit = async (value, outputPath) => {
 const help = `Usage:
   review-tools.mjs collect --pr <url|owner/repo#n> [--wait-checks <seconds>] [--out <file>]
   review-tools.mjs collect --range <base...target> [--repo <path>] [--out <file>]
-  review-tools.mjs compile-panel --evidence <file> --plan <file> [--out <file>]
+  review-tools.mjs compile-panel --evidence <file> [--plan <file>] [--out <file>]
   review-tools.mjs aggregate --input <file> [--out <file>]
   review-tools.mjs snapshot --pr <url|owner/repo#n> [--destination <path>] [--out <file>]
 `
@@ -1052,13 +1045,13 @@ const main = async () => {
   }
 
   if (command === 'compile-panel') {
-    if (!options.evidence || !options.plan) {
-      throw new Error('compile-panel requires --evidence and --plan')
+    if (!options.evidence) {
+      throw new Error('compile-panel requires --evidence')
     }
     await emit(
       await compilePanel({
         evidence: await readJson(options.evidence),
-        plan: await readJson(options.plan)
+        plan: options.plan ? await readJson(options.plan) : {}
       }),
       options.out
     )

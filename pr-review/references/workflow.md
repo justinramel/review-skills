@@ -78,8 +78,7 @@ On Oh My Pi, use the bundled `reviewer` agent for Standards and Spec and the bun
 Set high effort when the runner exposes it.
 Never change the user's model configuration during a review.
 
-Reviewers may read the pinned full diff only for necessary cross-file context.
-They must not read the target's local working tree, edit files, run formatters, run builds, run linters, run tests, or write to git.
+Reviewers must not read the target's local working tree, edit files, run formatters, run builds, run linters, run tests, or write to git.
 
 ## 5. Validate and aggregate
 
