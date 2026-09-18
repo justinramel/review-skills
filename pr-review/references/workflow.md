@@ -46,6 +46,8 @@ Stop before spawning reviewers when a ref does not resolve or the diff is empty.
 
 ## 2. Gather fixed-panel inputs
 
+Gather repository standards, resolve the strongest specification, and find architecture/domain context concurrently.
+
 ### Repository standards
 
 Read the target revision's `AGENTS.md`, `CONTRIBUTING.md`, and other coding-standard documents completely.
@@ -86,6 +88,7 @@ The panel compiler creates these reviewers; the orchestrator does not choose mod
 Load [`../schemas/reviewer-result.schema.json`](../schemas/reviewer-result.schema.json) once.
 Pass it as every task's strict invocation-level output schema.
 Start all three reviewers in one fan-out.
+When exact-head runtime validation will add evidence beyond available checks, start immutable snapshot validation beside the reviewer fan-out, collect it before aggregation, and remove the snapshot afterward.
 On Oh My Pi, use the bundled `reviewer` agent for Standards and Spec and the bundled `task` agent for Architecture & DDD.
 Set high effort when the runner exposes it.
 Never change the user's model configuration during a review.
@@ -100,9 +103,6 @@ Preserve every finding's reviewer and location. Consolidate exact duplicates int
 Write an aggregation input containing the three `reviewers`, collected `checks`, runtime `validation`, `conflictingEvidence`, and `securityOrDataLossRisk`.
 Each validation entry is `{"name":"...","status":"passed|failed|pending|not-run|not-applicable"}`.
 Run `node scripts/review-tools.mjs aggregate --input <file> --out <file>`, then follow [`reporting.md`](reporting.md) for the developer report.
-
-Use an immutable snapshot only when exact-head runtime validation adds evidence beyond available checks.
-Remove the snapshot after validation.
 
 ## 6. Draft or publish a PR comment
 
