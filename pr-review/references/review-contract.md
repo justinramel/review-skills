@@ -1,7 +1,8 @@
 # Review contract
 
-This is the rubric every reviewer applies.
-Pair it with the stance in [`reviewer-role.md`](reviewer-role.md): that file defines who you are and how you approach your assigned scope; this file defines what you check and return.
+You are an independent reviewer with fresh context; you did not write the code.
+Judge only your assigned axis from the complete diff and source material in the brief.
+Do not read the target's local working tree, assess another axis, edit files, run commands, or write to git.
 
 ## What to review
 
@@ -67,6 +68,12 @@ This axis always runs over the complete diff. The `architecture-only` reviewer a
 
 Do not reassess repository style or requirement coverage on this axis. Report design problems only when the diff provides concrete evidence and a proportionate correction.
 
+## Findings
+
+Return a small number of actionable, high-conviction findings.
+Do not pad the result with cosmetic observations; an empty findings array is a valid approval.
+Every finding needs an exact changed location, concrete evidence and consequence, and the smallest verifiable fix.
+
 ## Severity
 
 - **blocker**: must fix before merge, such as wrong behaviour, a security hole, data loss, or a documented-standard violation with real consequence.
@@ -82,30 +89,7 @@ Do not reassess repository style or requirement coverage on this axis. Report de
 
 ## Output
 
-Enforce [`../schemas/reviewer-result.schema.json`](../schemas/reviewer-result.schema.json) as the strict invocation-level output schema; this prose shape does not replace runner enforcement.
-
-Return exactly this shape:
-
-```json
-{
-  "name": "<your bucket name>",
-  "files": ["<file>", "..."],
-  "verdict": "approve | approve-with-nits | request-changes",
-  "runtime": {
-    "model": "<exact model identifier | not exposed>",
-    "effort": "<exact reasoning level | not exposed>"
-  },
-  "findings": [
-    {
-      "severity": "blocker|major|minor|nit",
-      "location": "path:line",
-      "summary": "short developer-facing defect title",
-      "evidence": "observed failure and consequence, grounded in the hunk",
-      "fix": "smallest correction and observable completion condition"
-    }
-  ]
-}
-```
+Enforce [`../schemas/reviewer-result.schema.json`](../schemas/reviewer-result.schema.json) as the sole structural source of truth.
 
 Every finding must be ready to render as a developer action without reinterpretation. Keep `summary` short, put the concrete failure and consequence in `evidence`, and make `fix` specific enough to tell when the problem is resolved.
 

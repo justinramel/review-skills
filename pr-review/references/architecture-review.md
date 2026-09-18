@@ -31,7 +31,3 @@ Apply this part only when the changed area expresses business concepts or the re
 - **Domain events**: events should describe domain facts, follow successful invariant enforcement, and have clear delivery and side-effect semantics when those matter to correctness.
 
 Prefer the smallest design correction that restores ownership or clarifies a seam. Do not demand aggregates, repositories, value objects, events, or layers merely because DDD names them.
-
-## Findings
-
-Report only actionable architecture or modelling problems introduced or materially exposed by the diff. Every finding needs an exact changed location, evidence, consequence, and fix direction. Use the shared severity, verdict, and JSON output contract. Return `Nothing found` through an empty findings array when the design is sound.

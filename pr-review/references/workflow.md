@@ -5,14 +5,26 @@ Review existing changes only.
 
 ## Prerequisites
 
-The harness needs parallel reviewers, complete diff access, the model control in [`model-policy.md`](model-policy.md), and invocation-level JSON Schema enforcement.
-If parallel agents are unavailable, run the same fixed reviewers sequentially and keep the report contract unchanged.
+The harness needs complete diff access, parallel reviewers, and invocation-level JSON Schema enforcement.
+Use the strongest available general reasoning profile with high effort for the orchestrator, a strong long-context Review profile with high effort for Standards and Spec, the deepest review profile with high effort for Architecture & DDD, and an economical profile with low effort for Gitkeeper.
+When per-task profiles are unavailable, use the deepest required profile for the whole panel.
+If parallel execution is unavailable, run the same three reviewers sequentially.
+Never change the user's model configuration or infer model and effort values the runtime did not expose.
 
 ## Tool-assisted path
 
-Prefer [`review-tools.mjs`](../scripts/review-tools.mjs) for evidence collection, fixed-panel compilation, aggregation, and immutable target snapshots when Node.js 20 or newer is available.
-Read [`tooling.md`](tooling.md) for its JSON interfaces and commands.
-The tools perform repeatable mechanics; the orchestrator selects source material, validates results, and writes the human-facing report.
+Run the dependency-free tool from the skill directory:
+
+```bash
+node scripts/review-tools.mjs collect --pr "$PR_URL" --out /tmp/pr-review-evidence.json
+node scripts/review-tools.mjs compile-panel --evidence /tmp/pr-review-evidence.json --out /tmp/pr-review-panel.json
+```
+
+Use `collect --range <base...target>` for a local review.
+When a stronger specification or repository-specific architecture source exists outside the evidence pack, pass `compile-panel` an optional plan containing `specification` and/or `architectureContext`.
+The plan shape is `{"specification":{"path":"...","content":"..."},"architectureContext":[{"path":"...","content":"..."}]}`; omit either key when unused.
+Use `node scripts/review-tools.mjs --help` for command options.
+The tool handles repeatable mechanics; the orchestrator selects source material, validates results, and writes the report.
 
 ## 1. Pin the change
 
@@ -85,8 +97,9 @@ Reviewers must not read the target's local working tree, edit files, run formatt
 Require exactly one structurally and semantically valid result named `Standards`, `Spec`, and `Architecture & DDD`.
 Reject wrappers, renamed axes, duplicate axes, missing axes, and malformed results.
 Preserve every finding's reviewer and location. Consolidate exact duplicates into one developer action only when all provenance remains visible.
-Use the deterministic aggregator for verdict, finding counts, merge status, and merge readiness.
-Follow [`reporting.md`](reporting.md) for the developer report.
+Write an aggregation input containing the three `reviewers`, collected `checks`, runtime `validation`, `conflictingEvidence`, and `securityOrDataLossRisk`.
+Each validation entry is `{"name":"...","status":"passed|failed|pending|not-run|not-applicable"}`.
+Run `node scripts/review-tools.mjs aggregate --input <file> --out <file>`, then follow [`reporting.md`](reporting.md) for the developer report.
 
 Use an immutable snapshot only when exact-head runtime validation adds evidence beyond available checks.
 Remove the snapshot after validation.

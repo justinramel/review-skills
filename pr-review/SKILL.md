@@ -23,7 +23,7 @@ A plain review request never authorizes publication.
 
 ## Required workflow
 
-1. Read [`references/model-policy.md`](references/model-policy.md): use the Review profile for Standards and Spec, the Deep review profile for Architecture & DDD, and the Publication profile for Gitkeeper.
+1. Use the capability routing in [`references/workflow.md`](references/workflow.md): Review for Standards and Spec, Deep review for Architecture & DDD, and an economical publication profile for Gitkeeper.
 2. Pin the declared base and target, preferably with the bundled evidence collector, and capture the complete diff, commit messages, standards candidates, specification candidates, and current checks.
 3. Gather repository standards and the strongest available specification. Fall back to the PR description and complete commit messages when no external issue or user-supplied specification resolves.
 4. Gather repository architecture and domain context when it exists; absence never removes the Architecture & DDD axis.
@@ -40,7 +40,7 @@ Use [`references/reporting.md`](references/reporting.md) for deterministic verdi
 - `spec-only`: Spec reviews the complete diff against the originating requirement or declared intent.
 - `architecture-only`: Architecture & DDD reviews the complete diff for module ownership, seams, dependencies, invariants, and domain modelling.
 
-Use [`references/two-axis.md`](references/two-axis.md) for the Standards and Spec split. Use [`references/architecture-review.md`](references/architecture-review.md) for the Architecture & DDD lens.
+Use [`references/review-contract.md`](references/review-contract.md) for Standards and Spec. Use [`references/architecture-review.md`](references/architecture-review.md) for the Architecture & DDD lens.
 
 ## Non-negotiable inputs
 
@@ -51,22 +51,7 @@ Every verdict-bearing brief must include:
 - Complete standards content at the target revision, or an immutable explicitly authorized URL, for Standards.
 - Complete specification content for Spec, using declared intent only as the final fallback.
 - Available architecture context and [`references/architecture-review.md`](references/architecture-review.md) for Architecture & DDD.
-- [`references/reviewer-role.md`](references/reviewer-role.md) and [`references/review-contract.md`](references/review-contract.md).
+- The reviewer stance and axis rules in [`references/review-contract.md`](references/review-contract.md).
 - The strict invocation-level schema in [`schemas/reviewer-result.schema.json`](schemas/reviewer-result.schema.json).
 
 Reviewers must not read the target's local working tree, edit files, run formatters, run tests, or write to git.
-
-## Bundled resources
-
-- [`references/workflow.md`](references/workflow.md): target pinning, input gathering, fixed reviewer briefs, fan-out, aggregation, and publication.
-- [`references/tooling.md`](references/tooling.md): evidence, fixed-panel compilation, aggregation, and immutable-snapshot tool interfaces.
-- [`references/reporting.md`](references/reporting.md): result validation, aggregation, status bands, report order, and merge readiness.
-- [`references/reviewer-role.md`](references/reviewer-role.md): independent reviewer stance and scope limits.
-- [`references/review-contract.md`](references/review-contract.md): Standards and Spec rubric, smells, severities, verdicts, and output contract.
-- [`references/model-policy.md`](references/model-policy.md): model selection, effort, and runtime evidence.
-- [`references/two-axis.md`](references/two-axis.md): fixed Standards and Spec axes.
-- [`references/architecture-review.md`](references/architecture-review.md): fixed Architecture & DDD axis.
-- [`references/gitkeeper-role.md`](references/gitkeeper-role.md): safe draft or publication of the settled review.
-- [`schemas/reviewer-result.schema.json`](schemas/reviewer-result.schema.json): strict invocation-level contract for every verdict-bearing reviewer.
-- [`scripts/review-tools.mjs`](scripts/review-tools.mjs): deterministic review mechanics used by the workflow.
-- [`scripts/setup-jira.sh`](scripts/setup-jira.sh) and [`scripts/jira-ticket.sh`](scripts/jira-ticket.sh): optional Jira spec setup and retrieval.

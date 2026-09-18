@@ -671,7 +671,7 @@ ${fullDiff}
 ${reviewer.context}
 
 # Change
-Follow skill://pr-review/references/reviewer-role.md and skill://pr-review/references/review-contract.md.
+Follow skill://pr-review/references/review-contract.md.
 Do not read the target local working tree, edit files, run formatters, run builds, run linters, run tests, or write to git.
 Apply only the assigned review mode.
 

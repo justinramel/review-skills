@@ -85,19 +85,6 @@ Setup and ticket fetching require `curl` and `jq`.
 |---|---|
 | [`pr-review`](pr-review/SKILL.md) | Fixed parallel Standards, Spec, and Architecture & DDD review over the complete diff, with deterministic merge status and an optional developer-facing PR comment. |
 
-The skill keeps its trigger file concise and loads focused references only when needed:
-
-- [`workflow.md`](pr-review/references/workflow.md) defines target pinning, evidence gathering, fixed reviewer briefs, and publication.
-- [`reporting.md`](pr-review/references/reporting.md) defines structured results, deterministic aggregation, merge status, merge readiness, and the developer report.
-- [`reviewer-role.md`](pr-review/references/reviewer-role.md) defines reviewer scope and behavior.
-- [`review-contract.md`](pr-review/references/review-contract.md) defines smells, severity, verdicts, runtime evidence, and structured output.
-- [`model-policy.md`](pr-review/references/model-policy.md) defines model selection, reasoning effort, and OMP configuration.
-- [`two-axis.md`](pr-review/references/two-axis.md) defines the focused Standards-only and Spec-only panel.
-- [`architecture-review.md`](pr-review/references/architecture-review.md) defines the always-on Architecture/DDD lens.
-- [`gitkeeper-role.md`](pr-review/references/gitkeeper-role.md) turns an authorized settled report into a developer-facing PR comment.
-- [`tooling.md`](pr-review/references/tooling.md) defines the bundled evidence, panel, aggregation, and immutable-snapshot interfaces.
-- [`reviewer-result.schema.json`](pr-review/schemas/reviewer-result.schema.json) enforces the verdict-bearing result shape at task invocation time.
-
 ## Requirements
 
 The skill combines a review methodology with a dependency-free Node.js tool for repeatable review mechanics.
@@ -116,7 +103,7 @@ Private GitHub evidence collection and snapshots require `GH_TOKEN` or `GITHUB_T
 Publishing the optional PR comment also needs an authenticated, write-capable GitHub client such as `gh`.
 Without it, the gitkeeper returns the complete draft without changing GitHub.
 
-The model policy is capability-based and does not require a specific model provider.
+Model selection is capability-based and does not require a specific provider.
 
 ## Lineage
 

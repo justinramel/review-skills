@@ -13,41 +13,14 @@ Prefer runner metadata, then the reviewer's exact report.
 Never infer a model or effort value.
 Use `not exposed` when runtime evidence is unavailable.
 
-## Overall verdict
+## Aggregation
 
+Pass the three validated results and available validation evidence to the deterministic aggregator.
+Use its verdict, finding counts, merge status, deciding rule, merge readiness, and readiness reason verbatim; do not recalculate or override them in prose.
 Keep every reviewer result and its provenance.
-Compute the overall verdict from the worst reviewer verdict in this order:
-
-```text
-request-changes > approve-with-nits > approve
-```
-
-Exact duplicate findings may become one developer action only when every source reviewer and location remains visible. Preserve differing evidence or fixes as separate actions.
-
-## Merge status
-
-Apply the first matching status in this order:
-
-- `RED`: any reviewer requested changes, any blocker or major exists, a required check failed, or a security or data-loss risk remains.
-- `GRAY`: any of the three required reviewer results is missing or invalid, or conflicting evidence prevents an honest rating.
-- `AMBER`: no RED or GRAY condition exists, but minor or nit findings remain or available relevant validation did not run.
-- `GREEN`: Standards, Spec, and Architecture & DDD all approved with no findings, and every applicable check passed or no applicable automated or runtime validation exists.
-
-Render the selected status only as the report's final line: 🔴 `RED`, ⚪ `GRAY`, 🟠 `AMBER`, or 🟢 `GREEN`, followed by the deciding reason.
-The text label remains canonical; the emoji is presentation only.
-Status is an attention band, not a merge recommendation, average, or finding count.
-No applicable validation is neutral rather than AMBER. Record that none exists. Validation that exists and is relevant but did not run remains AMBER.
-
-## Merge readiness
-
-Mark the result merge-ready only when all of these conditions hold:
-
-- No RED or GRAY condition applies.
-- Every applicable validation ran and passed, or the review established that no applicable automated or runtime validation exists.
-- Exactly one valid result exists for Standards, Spec, and Architecture & DDD.
-
-Minor or nit findings alone do not block merging.
-Always report `Merge-ready: Yes` or `Merge-ready: No` with the aggregator's `mergeReadyReason` immediately before the reviewer table. This keeps AMBER findings that are safe to follow up separate from AMBER evidence gaps that still block merging.
+Consolidate exact duplicate findings only when every source reviewer and location remains visible; preserve differing evidence or fixes as separate actions.
+Report `Merge-ready: Yes|No` with `mergeReadyReason` immediately before the reviewer table.
+Render `mergeStatus` as 🔴 `RED`, ⚪ `GRAY`, 🟠 `AMBER`, or 🟢 `GREEN`, followed by `decidingRule`, as the report's final line.
 
 ## Developer report
 
