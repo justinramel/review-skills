@@ -2,16 +2,18 @@
 
 Agent skills for fast, parallel pull-request review through fixed Standards, Spec, and Architecture & DDD axes. Reports keep actionable developer findings near the evidence and end with the reviewer table plus a deterministic merge-status band.
 
-```markdown
-## Required changes
+## Example report
 
-- [ ] **Prevent inherited Inbox handler lookup** - [`InboxSubscriber.handleEvent`](https://github.com/OWNER/REPO/blob/HEAD_SHA/src/inbox.subscriber.js#L165-L168)
+### Required changes
+
+- [ ] **Prevent inherited Inbox handler lookup** — `InboxSubscriber.handleEvent`
   Use an own-property-safe dispatch map so an event type such as `toString` cannot be marked complete without being handled.
 
-## Verdict and merge status
+### Verdict and merge status
 
-Overall verdict: request-changes - 0 blockers, 1 major, 0 minor, 0 nits.
-Merge-ready: No - Blocking findings, risks, or failed validation must be resolved before merge.
+Overall verdict: **request-changes** — 0 blockers, 1 major, 0 minor, 0 nits.
+
+Merge-ready: **No** — Blocking findings, risks, or failed validation must be resolved before merge.
 
 | Review area | Files | Verdict | Findings |
 |---|---|---|---:|
@@ -19,8 +21,7 @@ Merge-ready: No - Blocking findings, risks, or failed validation must be resolve
 | Spec | 6 files | approve | 0 |
 | Architecture & DDD | 6 files | approve | 0 |
 
-🔴 RED - A reviewer requested changes or a blocker or major finding remains.
-```
+🔴 **RED** — A reviewer requested changes or a blocker or major finding remains.
 
 Three reviewers start together with fresh context. Each owns one axis over the complete diff in one fixed workflow.
 
