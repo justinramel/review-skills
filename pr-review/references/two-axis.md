@@ -1,39 +1,29 @@
-# The two-axis panel
+# Standards and Spec axes
 
-For a small, single-purpose PR that has a linked issue or spec, a locality panel is overkill.
-Run two reviewers with explicit, non-overlapping modes:
+Every review runs two independent whole-diff reviewers:
 
 - **Standards** receives `Review mode: standards-only`.
-  It judges the whole diff against the repo's documented rules and the smell baseline in [`review-contract.md`](review-contract.md).
-  It must not assess the Spec axis.
+  It judges the complete diff against repository rules and the smell baseline in [`review-contract.md`](review-contract.md).
+  It does not assess requirement coverage.
 - **Spec** receives `Review mode: spec-only`.
-  It judges the whole diff against the originating issue or plan.
-  It must not assess Standards or smells.
+  It judges the complete diff against the strongest available requirement source.
+  It does not assess repository standards or smells.
 
-Each brief MUST state its review mode.
-The assigned mode selects which parts of [`reviewer-role.md`](reviewer-role.md) and [`review-contract.md`](review-contract.md) apply.
-Both reviewers see the whole diff and return the same structured result. If the gate in [`architecture-review.md`](architecture-review.md) selects `run`, add a third independent `architecture-only` reviewer for the architecture-relevant hunks. This fits the default fast depth:
+Use Jira, a linked issue, or a user-supplied specification when available.
+Otherwise use the PR title, PR body, and complete commit messages as declared intent; for a local range, use complete commit messages.
+Label this fallback honestly, but always run Spec.
 
-```
-| Review area | Files | Verdict | Findings |
-|---|---|---|---:|
-| Standards | (whole diff) | approve | 0 |
-| Spec | (whole diff) | approve-with-nits | 1 |
-```
+Architecture & DDD runs beside these two axes as a third independent whole-diff reviewer.
+Start all three in one fan-out.
 
 ## Why the axes stay separate
 
-A change can pass one axis and fail the other:
+A change can pass one axis and fail another:
 
-- Code that follows every standard but implements the wrong thing results in a Standards pass and Spec failure.
-- Code that implements the spec but breaks repository conventions results in a Spec pass and Standards failure.
+- Code can follow every standard while implementing the wrong behaviour.
+- Code can implement the requested behaviour while breaking repository conventions.
+- Both can pass while module ownership, dependency direction, or domain invariants regress.
 
-Keep every row and its findings separate, including the conditional Architecture & DDD row.
-Do not merge or rerank findings across axes.
-Compute the overall verdict from the worse row using this fixed order:
+Keep every reviewer result and its finding provenance.
+Compute the overall verdict from the worst result:
 `request-changes` > `approve-with-nits` > `approve`.
-A `request-changes` verdict from either axis makes the overall review not merge-ready.
-
-## If there is no spec
-
-Skip the Spec-only reviewer, run Standards-only, and say plainly in the report that no spec was available.

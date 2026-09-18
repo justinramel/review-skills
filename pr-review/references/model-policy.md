@@ -11,14 +11,14 @@ Use the strongest general-purpose coding and reasoning profile available in the 
 Set reasoning or thinking effort to **high** or the nearest provider equivalent.
 Higher effort is allowed.
 
-The orchestrator must sustain long-context tool use, decomposition, prompt construction, result validation, and deterministic aggregation.
+The orchestrator must sustain long-context tool use, fixed-panel prompt construction, result validation, and deterministic aggregation.
 The skill cannot change the model already running the parent session, so the caller or harness must start the orchestrator with this profile.
 
 ### Review
 
-Use a strong long-context code-review profile for `locality`, `standards-only`, and `spec-only`.
+Use a strong long-context code-review profile for `standards-only` and `spec-only`.
 Set reasoning or thinking effort to **high** or the nearest provider equivalent.
-This profile may be cheaper than the orchestrator when it can still hold the complete assigned hunks, standards, and specification in context and return reliable structured verdicts.
+This profile may be cheaper than the orchestrator when it can still hold the complete diff and its assigned standards or specification in context and return reliable structured verdicts.
 Do not use a lightweight summarization or short-context profile for verdict-bearing work.
 
 ### Deep review
@@ -39,7 +39,6 @@ The settled report is its source of truth; it must not reinterpret findings or m
 
 | Work | Required profile |
 |---|---|
-| `locality` review | Review |
 | `standards-only` review | Review |
 | `spec-only` review | Review |
 | `architecture-only` review | Deep review |

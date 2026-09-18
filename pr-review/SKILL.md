@@ -1,13 +1,13 @@
 ---
 name: pr-review
 description: >-
-  Fast-by-default PR review with parallel independent reviewers, a conditional Architecture & DDD axis, actionable developer findings, and deterministic merge status.
+  Fast PR review with a fixed parallel panel: Standards, Spec, and Architecture & DDD. Produces actionable developer findings and deterministic merge status.
   MUST use for a GitHub pull-request URL, "review PR", "review since <ref>", or a request to publish a completed review as a PR comment.
 ---
 
 # PR Review
 
-Review existing changes with independent reviewers that own separate slices or axes.
+Review every change through three independent axes over the complete diff.
 Do not edit application files, run formatters, or write to git during a review.
 
 ## Quick start
@@ -23,52 +23,50 @@ A plain review request never authorizes publication.
 
 ## Required workflow
 
-1. Read [`references/model-policy.md`](references/model-policy.md), use the Review profile for ordinary verdict axes, the Deep review profile for Architecture & DDD, and the Publication profile for Gitkeeper.
-2. Pin the declared base and target, preferably with the bundled evidence collector, and capture the complete diff, commit messages, standards candidates, spec candidates, and current checks.
-3. Gather repository standards and the first available spec source.
-4. Use the fast review depth unless the user explicitly requests a thorough review. Choose locality decomposition for changes spanning concerns, or use the two-axis panel for a focused change with a spec.
-5. Apply the architecture gate; only when it selects `run`, gather architecture and domain context and reserve one fast-panel slot for an Architecture & DDD reviewer.
-6. Compile task-ready briefs when the tool is available, then start every reviewer in one fan-out with its exact mode, scope, hunks, applicable standards, spec, review references, and strict schema.
-7. Enforce [`schemas/reviewer-result.schema.json`](schemas/reviewer-result.schema.json) at invocation time, validate each result semantically, then aggregate without losing finding provenance.
-8. Publish through the Gitkeeper only when the user explicitly authorized an external change.
+1. Read [`references/model-policy.md`](references/model-policy.md): use the Review profile for Standards and Spec, the Deep review profile for Architecture & DDD, and the Publication profile for Gitkeeper.
+2. Pin the declared base and target, preferably with the bundled evidence collector, and capture the complete diff, commit messages, standards candidates, specification candidates, and current checks.
+3. Gather repository standards and the strongest available specification. Fall back to the PR description and complete commit messages when no external issue or user-supplied specification resolves.
+4. Gather repository architecture and domain context when it exists; absence never removes the Architecture & DDD axis.
+5. Compile the fixed three-reviewer panel and start Standards, Spec, and Architecture & DDD in one fan-out over the complete diff.
+6. Enforce [`schemas/reviewer-result.schema.json`](schemas/reviewer-result.schema.json) at invocation time, require exactly one valid result from each axis, then aggregate without losing finding provenance.
+7. Publish through the Gitkeeper only when the user explicitly authorized an external change.
 
-Follow the complete fast-by-default orchestration procedure in [`references/workflow.md`](references/workflow.md).
+Follow the complete fixed-panel procedure in [`references/workflow.md`](references/workflow.md).
 Use [`references/reporting.md`](references/reporting.md) for deterministic verdict, merge status, merge readiness, and the developer report.
 
-## Review modes
+## Fixed review panel
 
-- `locality`: one coherent file bucket per reviewer; apply Standards and, when supplied, Spec.
-- `standards-only`: review the whole assigned diff only against repository rules and the smell baseline.
-- `spec-only`: review the whole assigned diff only against the originating issue or plan.
-- `architecture-only`: review the architecture-relevant diff against the conditional architecture and DDD lens.
+- `standards-only`: Standards reviews the complete diff against repository rules and the smell baseline.
+- `spec-only`: Spec reviews the complete diff against the originating requirement or declared intent.
+- `architecture-only`: Architecture & DDD reviews the complete diff for module ownership, seams, dependencies, invariants, and domain modelling.
 
-Use [`references/two-axis.md`](references/two-axis.md) for the Standards-only and Spec-only split. Use [`references/architecture-review.md`](references/architecture-review.md) to decide whether to add the Architecture & DDD axis and to brief it.
+Use [`references/two-axis.md`](references/two-axis.md) for the Standards and Spec split. Use [`references/architecture-review.md`](references/architecture-review.md) for the Architecture & DDD lens.
 
 ## Non-negotiable inputs
 
 Every verdict-bearing brief must include:
 
-- Exactly one review mode and the exact files it owns.
-- The assigned diff hunks, pasted into the brief rather than rediscovered by the reviewer.
-- Complete standards content at the target revision, or an immutable explicitly authorized URL, for modes that run Standards.
-- Complete spec content for modes that run Spec.
-- Architecture context and [`references/architecture-review.md`](references/architecture-review.md) for `architecture-only`.
+- Exactly one fixed review mode and the complete changed-file list.
+- The complete diff, pasted into the brief rather than rediscovered by the reviewer.
+- Complete standards content at the target revision, or an immutable explicitly authorized URL, for Standards.
+- Complete specification content for Spec, using declared intent only as the final fallback.
+- Available architecture context and [`references/architecture-review.md`](references/architecture-review.md) for Architecture & DDD.
 - [`references/reviewer-role.md`](references/reviewer-role.md) and [`references/review-contract.md`](references/review-contract.md).
 - The strict invocation-level schema in [`schemas/reviewer-result.schema.json`](schemas/reviewer-result.schema.json).
-- Permission to read the full diff only for necessary cross-file context.
+- Permission to read the pinned full diff only for necessary cross-file context.
 
 Reviewers must not read the target's local working tree, edit files, run formatters, run tests, or write to git.
 
 ## Bundled resources
 
-- [`references/workflow.md`](references/workflow.md): target pinning, evidence gathering, decomposition, reviewer briefs, and publication flow.
-- [`references/tooling.md`](references/tooling.md): evidence, panel, aggregation, and immutable-snapshot tool interfaces.
-- [`references/reporting.md`](references/reporting.md): result validation, aggregation, risk bands, report order, and merge readiness.
+- [`references/workflow.md`](references/workflow.md): target pinning, input gathering, fixed reviewer briefs, fan-out, aggregation, and publication.
+- [`references/tooling.md`](references/tooling.md): evidence, fixed-panel compilation, aggregation, and immutable-snapshot tool interfaces.
+- [`references/reporting.md`](references/reporting.md): result validation, aggregation, status bands, report order, and merge readiness.
 - [`references/reviewer-role.md`](references/reviewer-role.md): independent reviewer stance and scope limits.
 - [`references/review-contract.md`](references/review-contract.md): Standards and Spec rubric, smells, severities, verdicts, and output contract.
 - [`references/model-policy.md`](references/model-policy.md): model selection, effort, and runtime evidence.
-- [`references/two-axis.md`](references/two-axis.md): focused Standards-only and Spec-only decomposition.
-- [`references/architecture-review.md`](references/architecture-review.md): conditional gate and Architecture/DDD rubric.
+- [`references/two-axis.md`](references/two-axis.md): fixed Standards and Spec axes.
+- [`references/architecture-review.md`](references/architecture-review.md): fixed Architecture & DDD axis.
 - [`references/gitkeeper-role.md`](references/gitkeeper-role.md): safe draft or publication of the settled review.
 - [`schemas/reviewer-result.schema.json`](schemas/reviewer-result.schema.json): strict invocation-level contract for every verdict-bearing reviewer.
 - [`scripts/review-tools.mjs`](scripts/review-tools.mjs): deterministic review mechanics used by the workflow.

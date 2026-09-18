@@ -7,10 +7,9 @@ Pair it with the stance in [`reviewer-role.md`](reviewer-role.md): that file def
 
 The brief assigns exactly one review mode:
 
-- **`locality`**: review the assigned file slice on Standards and, when a spec was supplied, Spec.
 - **`standards-only`**: review the whole diff on Standards only.
 - **`spec-only`**: review the whole diff on Spec only.
-- **`architecture-only`**: review the architecture-relevant diff only through [`architecture-review.md`](architecture-review.md).
+- **`architecture-only`**: review the whole diff only through [`architecture-review.md`](architecture-review.md).
 
 Never run an axis the assigned mode excludes.
 
@@ -52,18 +51,19 @@ Tests get three smells of their own:
 
 ### Spec
 
-The linked issue / plan is the source of truth.
-Report, quoting the spec line:
+The supplied requirement source is the source of truth for this axis.
+Use Jira, a linked issue, or a user-supplied specification when available; otherwise use the labeled PR or commit-message declared-intent fallback.
+Report, quoting the applicable source line when one exists:
 
 - **Missing**: requested behaviour absent or partial.
 - **Creep**: behaviour or files nobody asked for.
 - **Wrong**: a requirement that looks implemented but whose behaviour does not hold up.
 
-If no spec was supplied, locality reviewers run Standards only and a two-axis panel omits the Spec-only reviewer.
+Declared intent is weaker than an external requirement. State that limitation in the report rather than skipping the Spec axis.
 
 ### Architecture and DDD
 
-This axis is conditional. The orchestrator applies the gate in [`architecture-review.md`](architecture-review.md); an `architecture-only` reviewer applies its Architecture lens and applies its DDD lens only to domain-bearing code. Repository architecture decisions take precedence over the general lens.
+This axis always runs over the complete diff. The `architecture-only` reviewer applies its Architecture lens and applies its DDD lens only to domain-bearing code. Repository architecture decisions take precedence over the general lens.
 
 Do not reassess repository style or requirement coverage on this axis. Report design problems only when the diff provides concrete evidence and a proportionate correction.
 

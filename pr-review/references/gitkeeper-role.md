@@ -38,7 +38,7 @@ Then write one top-level developer report in this order:
 4. `## Worth a closer look`
    Include changed areas that warrant human attention without repeating findings.
 5. `## Validation`
-   State the pinned target and observed checks. Say plainly when tests, runtime verification, or the Spec axis did not run and record the Architecture & DDD gate result.
+   State the pinned target, specification source, observed checks, and coverage by all three fixed reviewers. Say plainly when tests or runtime verification did not run.
 6. `## Verdict and merge status`
    Preserve the overall verdict, finding counts, explicit `Merge-ready: Yes|No` decision, reviewer table, and exact GREEN, AMBER, RED, or GRAY deciding reason. Keep the coloured status as the final line.
 

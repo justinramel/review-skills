@@ -29,9 +29,9 @@ Exact duplicate findings may become one developer action only when every source 
 Apply the first matching status in this order:
 
 - `RED`: any reviewer requested changes, any blocker or major exists, a required check failed, or a security or data-loss risk remains.
-- `GRAY`: a reviewer failed, critical scope was not reviewed, or conflicting evidence prevents an honest rating.
-- `AMBER`: no RED or GRAY condition exists, but minor or nit findings remain, available relevant validation did not run, or the Spec axis was unavailable for a behavior-changing change.
-- `GREEN`: every reviewer approved with no findings, intended scope was covered, every applicable check passed or no applicable automated or runtime validation exists, Spec was reviewed or was not needed, and the Architecture & DDD axis ran or was skipped by its gate.
+- `GRAY`: any of the three required reviewer results is missing or invalid, or conflicting evidence prevents an honest rating.
+- `AMBER`: no RED or GRAY condition exists, but minor or nit findings remain or available relevant validation did not run.
+- `GREEN`: Standards, Spec, and Architecture & DDD all approved with no findings, and every applicable check passed or no applicable automated or runtime validation exists.
 
 Render the selected status only as the report's final line: 🔴 `RED`, ⚪ `GRAY`, 🟠 `AMBER`, or 🟢 `GREEN`, followed by the deciding reason.
 The text label remains canonical; the emoji is presentation only.
@@ -44,8 +44,7 @@ Mark the result merge-ready only when all of these conditions hold:
 
 - No RED or GRAY condition applies.
 - Every applicable validation ran and passed, or the review established that no applicable automated or runtime validation exists.
-- The Spec axis ran or was not needed.
-- The Architecture & DDD axis ran or the recorded architecture gate selected `skip`.
+- Exactly one valid result exists for Standards, Spec, and Architecture & DDD.
 
 Minor or nit findings alone do not block merging.
 Always report `Merge-ready: Yes` or `Merge-ready: No` with the aggregator's `mergeReadyReason` immediately before the reviewer table. This keeps AMBER findings that are safe to follow up separate from AMBER evidence gaps that still block merging.
@@ -55,7 +54,7 @@ Always report `Merge-ready: Yes` or `Merge-ready: No` with the aggregator's `mer
 Write the report for the developer who must act on it:
 
 1. Start with `## Change summary`: two to five diff-grounded bullets.
-2. State the selected review depth, decomposition, and architecture-gate result with one concrete reason each.
+2. State the specification source and that the fixed Standards, Spec, and Architecture & DDD panel reviewed the complete diff.
 3. Add `## Required changes` when blocker or major findings exist. Render each as one checklist item with its linked location, summary, evidence and consequence, then its exact fix. Order by severity, then source order.
 4. Add `## Non-blocking suggestions` only when minor or nit findings exist. Use the same compact action shape without checkboxes.
 5. Add `## Areas worth human inspection`: two to five changed functions, scripts, or sections with a concrete reason. Do not repeat a finding without adding a distinct inspection concern.

@@ -22,11 +22,10 @@ const reviewerSchemaPath = path.join(
 )
 const reviewerSchema = JSON.parse(readFileSync(reviewerSchemaPath, 'utf8'))
 
-const modes = new Set([
-  'locality',
-  'standards-only',
-  'spec-only',
-  'architecture-only'
+const requiredReviewerNames = new Set([
+  'Standards',
+  'Spec',
+  'Architecture & DDD'
 ])
 const verdictOrder = new Map([
   ['approve', 0],
@@ -572,77 +571,29 @@ const sourceText = (source) => {
   return `Source: ${label}\n${content}`
 }
 
-const sameMembers = (left, right) =>
-  left.length === right.length &&
-  [...left].sort().every((value, index) => value === [...right].sort()[index])
-
 export const compilePanel = async ({ evidence, plan }) => {
-  if (!Array.isArray(plan.reviewers) || plan.reviewers.length === 0) {
-    throw new Error('Panel plan must contain at least one reviewer')
-  }
-  if (typeof plan.fullDiffUri !== 'string' || !plan.fullDiffUri) {
+  if (!plan || typeof plan.fullDiffUri !== 'string' || !plan.fullDiffUri) {
     throw new Error('Panel plan must provide fullDiffUri')
   }
-  const reviewDepth = plan.reviewDepth ?? 'fast'
-  if (!['fast', 'thorough'].includes(reviewDepth)) {
-    throw new Error(`Unsupported review depth ${reviewDepth}`)
-  }
-  const maximumReviewers = reviewDepth === 'fast' ? 3 : 6
-  if (plan.reviewers.length > maximumReviewers) {
+
+  const allowedPlanKeys = new Set([
+    'fullDiffUri',
+    'standards',
+    'specification',
+    'architectureContext'
+  ])
+  const unsupportedPlanKeys = Object.keys(plan).filter(
+    (key) => !allowedPlanKeys.has(key)
+  )
+  if (unsupportedPlanKeys.length > 0) {
     throw new Error(
-      `${reviewDepth} review supports at most ${maximumReviewers} verdict-bearing reviewers`
+      `Panel plan has unsupported keys: ${unsupportedPlanKeys.join(', ')}`
     )
   }
 
   const changedFiles = evidence.diff.files.map((file) => file.path)
-  const changedFileSet = new Set(changedFiles)
-  const localityOwners = new Map()
-  const schema = reviewerSchema
-
-  for (const reviewer of plan.reviewers) {
-    if (!modes.has(reviewer.mode)) {
-      throw new Error(`${reviewer.name} has unsupported mode ${reviewer.mode}`)
-    }
-    if (!reviewer.name || !Array.isArray(reviewer.files) || reviewer.files.length === 0) {
-      throw new Error('Every reviewer needs a name and at least one owned file')
-    }
-    for (const file of reviewer.files) {
-      if (!changedFileSet.has(file)) {
-        throw new Error(`${reviewer.name} owns unchanged or unknown file ${file}`)
-      }
-      if (reviewer.mode === 'locality') {
-        if (localityOwners.has(file)) {
-          throw new Error(
-            `${file} is owned by both ${localityOwners.get(file)} and ${reviewer.name}`
-          )
-        }
-        localityOwners.set(file, reviewer.name)
-      }
-    }
-    if (
-      ['standards-only', 'spec-only'].includes(reviewer.mode) &&
-      !sameMembers(reviewer.files, changedFiles)
-    ) {
-      throw new Error(`${reviewer.mode} reviewer ${reviewer.name} must own the whole diff`)
-    }
-    if (reviewer.mode === 'spec-only' && !plan.specification) {
-      throw new Error(`Spec reviewer ${reviewer.name} has no specification`)
-    }
-    if (
-      reviewer.mode === 'architecture-only' &&
-      !(plan.architectureContext?.length > 0)
-    ) {
-      throw new Error(
-        `Architecture reviewer ${reviewer.name} has no architecture context`
-      )
-    }
-  }
-
-  if (
-    plan.reviewers.some((reviewer) => reviewer.mode === 'locality') &&
-    !sameMembers([...localityOwners.keys()], changedFiles)
-  ) {
-    throw new Error('Locality reviewers must own every changed file exactly once')
+  if (changedFiles.length === 0) {
+    throw new Error('Panel evidence must contain at least one changed file')
   }
 
   const pinned = evidence.pullRequest
@@ -651,43 +602,72 @@ export const compilePanel = async ({ evidence, plan }) => {
   const standards = (plan.standards ?? evidence.standards ?? [])
     .map(sourceText)
     .join('\n\n')
-  const specification = sourceText(plan.specification)
+  const declaredIntent = [
+    evidence.pullRequest?.title
+      ? `Pull request title: ${evidence.pullRequest.title}`
+      : '',
+    evidence.pullRequest?.body
+      ? `Pull request body:\n${evidence.pullRequest.body}`
+      : '',
+    ...(evidence.commits ?? []).map(
+      (commit) => `Commit ${commit.sha ?? 'unknown'}:\n${commit.message ?? ''}`
+    )
+  ]
+    .filter(Boolean)
+    .join('\n\n')
+  const specificationSource =
+    plan.specification ??
+    (declaredIntent
+      ? {
+          path: evidence.pullRequest?.url ?? 'commit messages',
+          content: declaredIntent
+        }
+      : null)
+  if (!specificationSource) {
+    throw new Error(
+      'Fixed review panel requires a specification or declared change intent'
+    )
+  }
+  const specification = sourceText(specificationSource)
   const architectureContext = (plan.architectureContext ?? [])
     .map(sourceText)
     .join('\n\n')
-
-  const reviewers = plan.reviewers.map((reviewer) => {
-    const ownedDiff = evidence.diff.files
-      .filter((file) => reviewer.files.includes(file.path))
-      .map((file) => file.diff)
-      .join('\n')
-    const applicable = []
-
-    if (['locality', 'standards-only'].includes(reviewer.mode)) {
-      applicable.push(
-        `Repository standards at the target revision:\n${standards || 'No documented repository standards were found.'}`
-      )
+  const fullDiff = evidence.diff.files.map((file) => file.diff).join('\n')
+  const files = changedFiles.map((file) => `- ${file}`).join('\n')
+  const reviewerDefinitions = [
+    {
+      name: 'Standards',
+      mode: 'standards-only',
+      profile: 'review',
+      context: `Repository standards at the target revision:\n${standards || 'No documented repository standards were found.'}`
+    },
+    {
+      name: 'Spec',
+      mode: 'spec-only',
+      profile: 'review',
+      context: `Specification:\n${specification}`
+    },
+    {
+      name: 'Architecture & DDD',
+      mode: 'architecture-only',
+      profile: 'deep-review',
+      context: `Architecture and domain context:\n${architectureContext || 'No repository-specific architecture context was found. Apply the bundled Architecture and DDD lens to the complete diff.'}`
     }
-    if (['locality', 'spec-only'].includes(reviewer.mode) && specification) {
-      applicable.push(`Specification:\n${specification}`)
-    }
-    if (reviewer.mode === 'architecture-only') {
-      applicable.push(`Architecture and domain context:\n${architectureContext}`)
-    }
-
-    const files = reviewer.files.map((file) => `- ${file}`).join('\n')
+  ]
+  const schema = reviewerSchema
+  const reviewers = reviewerDefinitions.map((reviewer) => {
     const task = `# Target
 Review mode: ${reviewer.mode}.
 Pinned change: ${pinned}.
-Own exactly these files:
+Review the complete changed-file set:
 ${files}
 
-Exact assigned diff hunks:
+Exact complete diff:
 \`\`\`diff
-${ownedDiff}
+${fullDiff}
 \`\`\`
 
-${applicable.join('\n\n')}
+${reviewer.context}
 
 # Change
 Follow skill://pr-review/references/reviewer-role.md and skill://pr-review/references/review-contract.md.
@@ -696,21 +676,20 @@ Do not read the target local working tree, edit files, run formatters, run build
 Apply only the assigned review mode.
 
 # Acceptance
-Return exactly the reviewer result contract. Use name ${JSON.stringify(reviewer.name)} and list the owned files exactly.`
+Return exactly the reviewer result contract. Use name ${JSON.stringify(reviewer.name)} and list the changed files exactly.`
 
     return {
       name: reviewer.name,
       mode: reviewer.mode,
-      profile:
-        reviewer.mode === 'architecture-only' ? 'deep-review' : 'review',
-      files: reviewer.files,
+      profile: reviewer.profile,
+      files: changedFiles,
       task,
       outputSchema: schema,
       schemaMode: 'strict'
     }
   })
 
-  return { pinned, reviewDepth, reviewers }
+  return { pinned, reviewers }
 }
 
 const validateJsonSchema = (value, schema, location, errors) => {
@@ -821,16 +800,48 @@ export const validateReviewerResult = (result) => {
 export const aggregateReview = (input) => {
   const reviewerResults = Array.isArray(input.reviewers) ? input.reviewers : []
   const validationErrors = []
-
-  if (reviewerResults.length === 0) {
-    validationErrors.push('at least one reviewer result is required')
+  const reviewerNameCounts = new Map()
+  const allowedInputKeys = new Set([
+    'reviewers',
+    'checks',
+    'validation',
+    'conflictingEvidence',
+    'securityOrDataLossRisk'
+  ])
+  const unsupportedInputKeys = Object.keys(input).filter(
+    (key) => !allowedInputKeys.has(key)
+  )
+  if (unsupportedInputKeys.length > 0) {
+    validationErrors.push(
+      `aggregation input has unsupported keys: ${unsupportedInputKeys.join(', ')}`
+    )
   }
 
   reviewerResults.forEach((result, index) => {
     for (const error of validateReviewerResult(result)) {
       validationErrors.push(`reviewers[${index}]: ${error}`)
     }
+    if (typeof result?.name === 'string') {
+      reviewerNameCounts.set(
+        result.name,
+        (reviewerNameCounts.get(result.name) ?? 0) + 1
+      )
+      if (!requiredReviewerNames.has(result.name)) {
+        validationErrors.push(
+          `reviewers[${index}]: unsupported reviewer name ${result.name}`
+        )
+      }
+    }
   })
+
+  for (const name of requiredReviewerNames) {
+    const count = reviewerNameCounts.get(name) ?? 0
+    if (count !== 1) {
+      validationErrors.push(
+        `fixed panel requires exactly one ${name} result; received ${count}`
+      )
+    }
+  }
 
   const counts = { blocker: 0, major: 0, minor: 0, nit: 0 }
 
@@ -854,14 +865,6 @@ export const aggregateReview = (input) => {
   const incompleteValidation = validation.some((item) =>
     ['pending', 'not-run'].includes(item.status)
   )
-  const spec = input.spec ?? { status: 'unavailable', behaviorChanging: true }
-  const specComplete =
-    ['reviewed', 'not-needed'].includes(spec.status) ||
-    (spec.status === 'unavailable' && spec.behaviorChanging === false)
-  const architecture = input.architecture ?? {
-    gate: 'skip',
-    reviewed: false
-  }
   let mergeStatus
   let decidingRule
 
@@ -887,68 +890,48 @@ export const aggregateReview = (input) => {
     }
   } else if (
     validationErrors.length > 0 ||
-    input.criticalScopeReviewed === false ||
-    input.conflictingEvidence === true ||
-    (architecture.gate === 'run' && architecture.reviewed !== true)
+    input.conflictingEvidence === true
   ) {
     mergeStatus = 'GRAY'
-    if (validationErrors.length > 0) {
-      decidingRule = 'A reviewer result was invalid.'
-    } else if (input.criticalScopeReviewed === false) {
-      decidingRule = 'Critical scope was not reviewed.'
-    } else if (input.conflictingEvidence === true) {
-      decidingRule = 'Review evidence conflicts.'
-    } else {
-      decidingRule = 'The required Architecture & DDD review did not run.'
-    }
+    decidingRule =
+      validationErrors.length > 0
+        ? 'The fixed review panel is incomplete or a reviewer result is invalid.'
+        : 'Review evidence conflicts.'
   } else if (
     counts.minor > 0 ||
     counts.nit > 0 ||
     checks.state === 'pending' ||
-    incompleteValidation ||
-    !specComplete
+    incompleteValidation
   ) {
     mergeStatus = 'AMBER'
-    if (!specComplete) {
-      decidingRule =
-        spec.status === 'unavailable' && spec.behaviorChanging === true
-          ? 'The Spec axis was unavailable for a behavior-changing change.'
-          : 'The Spec axis did not run and was not marked not-needed.'
-    } else if (checks.state === 'pending' || incompleteValidation) {
-      decidingRule = 'Relevant validation is pending or did not run.'
-    } else {
-      decidingRule = 'Non-blocking findings remain.'
-    }
+    decidingRule =
+      checks.state === 'pending' || incompleteValidation
+        ? 'Relevant validation is pending or did not run.'
+        : 'Non-blocking findings remain.'
   } else {
     mergeStatus = 'GREEN'
-    decidingRule = 'Every reviewer approved and all applicable review and validation evidence is complete.'
+    decidingRule = 'All three reviewers approved and all applicable validation evidence is complete.'
   }
 
   const mergeReady =
     !['RED', 'GRAY'].includes(mergeStatus) &&
     !['failure', 'pending'].includes(checks.state) &&
     !failedValidation &&
-    !incompleteValidation &&
-    specComplete &&
-    (architecture.gate === 'skip' || architecture.reviewed === true)
+    !incompleteValidation
 
   let mergeReadyReason
   if (mergeReady) {
     mergeReadyReason =
       counts.minor > 0 || counts.nit > 0
-        ? 'Only non-blocking findings remain; required review and validation evidence is complete.'
-        : 'Required review and validation evidence is complete.'
+        ? 'Only non-blocking findings remain; the fixed panel and required validation are complete.'
+        : 'The fixed panel and required validation are complete.'
   } else if (mergeStatus === 'RED') {
     mergeReadyReason =
       'Blocking findings, risks, or failed validation must be resolved before merge.'
   } else if (mergeStatus === 'GRAY') {
-    mergeReadyReason = 'Review evidence is invalid, incomplete, or conflicting.'
-  } else if (checks.state === 'pending' || incompleteValidation) {
-    mergeReadyReason = 'Relevant validation is pending or did not run.'
-  } else if (!specComplete) {
-    mergeReadyReason = 'The Spec axis did not run and was not marked not-needed.'
+    mergeReadyReason = 'The fixed review panel is invalid, incomplete, or conflicting.'
   } else {
-    mergeReadyReason = 'Required review evidence is incomplete.'
+    mergeReadyReason = 'Relevant validation is pending or did not run.'
   }
 
   return {

@@ -1,6 +1,6 @@
 # review-skills
 
-Agent skills for fast, parallel pull-request review with an optional Architecture & DDD axis. Reports keep actionable developer findings near the evidence and end with the reviewer table plus a deterministic merge-status band.
+Agent skills for fast, parallel pull-request review through fixed Standards, Spec, and Architecture & DDD axes. Reports keep actionable developer findings near the evidence and end with the reviewer table plus a deterministic merge-status band.
 
 ```markdown
 ## Required changes
@@ -15,12 +15,14 @@ Merge-ready: No - Blocking findings, risks, or failed validation must be resolve
 
 | Review area | Files | Verdict | Findings |
 |---|---|---|---:|
-| Inbox lifecycle | 6 files | request-changes | 1 major |
+| Standards | 6 files | request-changes | 1 major |
+| Spec | 6 files | approve | 0 |
+| Architecture & DDD | 6 files | approve | 0 |
 
 🔴 RED - A reviewer requested changes or a blocker or major finding remains.
 ```
 
-Each reviewer starts with fresh context and owns one concern or review axis. Fast depth is the default and limits the panel to three verdict-bearing reviewers, including the conditional Architecture & DDD axis.
+Three reviewers start together with fresh context. Each owns one axis over the complete diff in one fixed workflow.
 
 ## Install
 
@@ -37,8 +39,6 @@ Then just ask your agent to review a PR:
 ```
 review https://github.com/OWNER/REPO/pull/123
 ```
-
-Reviews use fast depth by default. Ask `review thoroughly ...` to permit a panel of up to six reviewers.
 
 Skill selection uses the harness's installed skill registry; a repository clone alone may not register `pr-review`.
 Start a new agent session after installation and confirm that `pr-review` is available.
@@ -76,24 +76,24 @@ Setup stores credentials as non-executable JSON at `~/.config/pr-review/jira.jso
 The installed skill reads that same user-level configuration, so you may delete the setup clone afterward.
 
 When a PR title, branch, or commit carries a Jira key such as `FGP-1392`, the reviewer fetches that ticket as the spec.
-Without Jira, the skill falls back to the linked GitHub issue.
+Without Jira, the skill falls back to the linked GitHub issue, then to declared intent from the PR title, body, and commit messages.
 Setup and ticket fetching require `curl` and `jq`.
 
 ## What's in here
 
 | Skill | What it does |
 |---|---|
-| [`pr-review`](pr-review/SKILL.md) | Fast-by-default parallel review with locality or Standards/Spec decomposition, a conditional Architecture & DDD reviewer, deterministic merge status, and an optional developer-facing PR comment. |
+| [`pr-review`](pr-review/SKILL.md) | Fixed parallel Standards, Spec, and Architecture & DDD review over the complete diff, with deterministic merge status and an optional developer-facing PR comment. |
 
 The skill keeps its trigger file concise and loads focused references only when needed:
 
-- [`workflow.md`](pr-review/references/workflow.md) defines target pinning, evidence gathering, decomposition, reviewer briefs, and publication.
+- [`workflow.md`](pr-review/references/workflow.md) defines target pinning, evidence gathering, fixed reviewer briefs, and publication.
 - [`reporting.md`](pr-review/references/reporting.md) defines structured results, deterministic aggregation, merge status, merge readiness, and the developer report.
 - [`reviewer-role.md`](pr-review/references/reviewer-role.md) defines reviewer scope and behavior.
 - [`review-contract.md`](pr-review/references/review-contract.md) defines smells, severity, verdicts, runtime evidence, and structured output.
 - [`model-policy.md`](pr-review/references/model-policy.md) defines model selection, reasoning effort, and OMP configuration.
 - [`two-axis.md`](pr-review/references/two-axis.md) defines the focused Standards-only and Spec-only panel.
-- [`architecture-review.md`](pr-review/references/architecture-review.md) defines when architecture review is warranted and its Architecture/DDD lens.
+- [`architecture-review.md`](pr-review/references/architecture-review.md) defines the always-on Architecture/DDD lens.
 - [`gitkeeper-role.md`](pr-review/references/gitkeeper-role.md) turns an authorized settled report into a developer-facing PR comment.
 - [`tooling.md`](pr-review/references/tooling.md) defines the bundled evidence, panel, aggregation, and immutable-snapshot interfaces.
 - [`reviewer-result.schema.json`](pr-review/schemas/reviewer-result.schema.json) enforces the verdict-bearing result shape at task invocation time.
@@ -103,7 +103,7 @@ The skill keeps its trigger file concise and loads focused references only when 
 The skill combines a review methodology with a dependency-free Node.js tool for repeatable review mechanics.
 The agent harness needs four review capabilities:
 
-1. **Parallel subagents**: a way to start N background reviewers in one fan-out, such as Oh My Pi's `task` tool or another concurrent subagent runner.
+1. **Parallel subagents**: a way to start three background reviewers in one fan-out, such as Oh My Pi's `task` tool or another concurrent subagent runner.
    Without parallel execution, the reviewers may run sequentially and produce the same report more slowly.
 2. **Diff access**: either a PR resolver such as `pr://<owner>/<repo>/<n>/diff/all` or plain `git diff <base>...<target>`.
 3. **Capability-based model control**: the orchestrator uses the strongest general reasoning profile, ordinary verdict axes use a strong long-context review profile, and Architecture & DDD uses the deepest review profile.
@@ -121,8 +121,8 @@ The model policy is capability-based and does not require a specific model provi
 ## Lineage
 
 The two-axis (Standards + Spec) split and the Fowler code-smell baseline are long-standing ideas - the smells are from Martin Fowler's _Refactoring_ (ch. 3), and a similar two-axis skill ships in [Matt Pocock's skills](https://github.com/mattpocock/skills).
-The conditional architecture lens uses deep-module and seam vocabulary alongside pragmatic DDD checks; it does not require tactical DDD patterns.
-This repo's contribution is the fast-by-default parallel locality panel, conditional Architecture & DDD axis, deterministic merge status, and actionable developer report, plus a single reviewer contract shared across whichever decomposition you pick.
+The architecture lens uses deep-module and seam vocabulary alongside pragmatic DDD checks; it does not require tactical DDD patterns.
+This repo's contribution is the fixed three-axis parallel panel, deterministic merge status, and actionable developer report, plus one strict reviewer contract shared by every axis.
 
 ## License
 

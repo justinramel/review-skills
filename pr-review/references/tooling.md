@@ -1,7 +1,7 @@
 # Review tools
 
 The bundled `scripts/review-tools.mjs` performs repeatable review mechanics.
-It does not choose a decomposition, decide the architecture gate, judge findings, or publish to GitHub.
+It does not judge findings or publish to GitHub.
 Every command writes JSON to stdout unless `--out <file>` is supplied.
 
 Run commands from the `pr-review` skill directory.
@@ -86,14 +86,12 @@ The common fields are:
 Local evidence uses `range` instead of `pullRequest`.
 `standardsDiscoveryTruncated: true` means GitHub truncated its recursive tree response; gather missing standards before briefing reviewers.
 
-## Compile a panel
+## Compile the fixed panel
 
-The orchestrator still chooses the review depth, decomposition, modes, files, specification, and architecture context.
-Write those decisions as a plan. `reviewDepth` defaults to `fast`; set `thorough` only when the user explicitly requested it.
+Write the complete diff URI and any explicit specification or architecture context as the plan:
 
 ```json
 {
-  "reviewDepth": "fast",
   "fullDiffUri": "pr://OWNER/REPO/123/diff/all",
   "specification": {
     "path": "issue://OWNER/REPO/99",
@@ -104,21 +102,12 @@ Write those decisions as a plan. `reviewDepth` defaults to `fast`; set `thorough
       "path": "docs/architecture.md",
       "content": "Complete applicable content"
     }
-  ],
-  "reviewers": [
-    {
-      "name": "Standards",
-      "mode": "standards-only",
-      "files": ["src/example.ts", "src/example.test.ts"]
-    },
-    {
-      "name": "Spec",
-      "mode": "spec-only",
-      "files": ["src/example.ts", "src/example.test.ts"]
-    }
   ]
 }
 ```
+
+`specification` is optional when the evidence includes PR title, body, or complete commit messages.
+`architectureContext` is optional; the Architecture & DDD reviewer uses the bundled lens when repository-specific material does not exist.
 
 Compile task-ready briefs:
 
@@ -131,15 +120,15 @@ node scripts/review-tools.mjs compile-panel \
 
 The compiler:
 
-- defaults to fast depth and rejects more than three verdict-bearing reviewers;
-- permits up to six reviewers only for an explicitly thorough plan;
-- rejects unknown files and incomplete whole-diff axes;
-- requires every changed file to have exactly one locality owner when locality mode is used;
-- requires a specification for `spec-only` and architecture context for `architecture-only`;
-- embeds each reviewer's exact diff hunks and applicable sources;
-- returns `reviewDepth`, `profile`, `task`, `outputSchema`, and `schemaMode: "strict"`.
+- creates exactly Standards, Spec, and Architecture & DDD reviewers;
+- assigns `standards-only`, `spec-only`, and `architecture-only` respectively;
+- gives every reviewer every changed file and the complete diff;
+- rejects custom reviewers, review depth, unknown plan fields, and incomplete inputs;
+- uses declared PR or commit intent when no stronger specification is supplied;
+- embeds each reviewer's applicable sources;
+- returns `profile`, `task`, `outputSchema`, and `schemaMode: "strict"`.
 
-The orchestrator maps `profile` to the runner configuration and starts the returned reviewers in one fan-out.
+The orchestrator maps `profile` to the runner configuration and starts all three reviewers in one fan-out.
 
 ## Aggregate results
 
@@ -149,18 +138,9 @@ Create an aggregation input after every strict reviewer result has returned:
 {
   "reviewers": [],
   "checks": { "state": "success", "runs": [] },
-  "spec": {
-    "status": "reviewed | not-needed | unavailable",
-    "behaviorChanging": true
-  },
-  "architecture": {
-    "gate": "run | skip",
-    "reviewed": true
-  },
   "validation": [
     { "name": "CI", "status": "passed | failed | pending | not-run | not-applicable" }
   ],
-  "criticalScopeReviewed": true,
   "conflictingEvidence": false,
   "securityOrDataLossRisk": false
 }
@@ -174,9 +154,10 @@ node scripts/review-tools.mjs aggregate \
   --out /tmp/pr-review-aggregate.json
 ```
 
-The aggregator validates structure and verdict/finding consistency, preserves reviewer results, counts severities, applies the fixed verdict and status rules, and returns `mergeStatus` with its `decidingRule` plus `mergeReady` with its independent `mergeReadyReason`.
+The aggregator requires exactly one valid result named Standards, Spec, and Architecture & DDD.
+It validates structure and verdict/finding consistency, preserves reviewer results, counts severities, applies the fixed verdict and status rules, and returns `mergeStatus` with its `decidingRule` plus `mergeReady` with its independent `mergeReadyReason`.
 It does not merge, deduplicate, rerank, or rewrite findings; the developer report may consolidate only exact duplicates while retaining their provenance.
-A malformed reviewer result produces `GRAY` and `valid: false`; it is never translated into the expected schema.
+A missing, duplicate, unsupported, or malformed reviewer result produces `GRAY` and `valid: false`; it is never translated into the expected schema.
 
 ## Materialize an immutable target
 
