@@ -25,11 +25,10 @@ A plain review request never authorizes publication.
 
 1. Use the capability routing in [`references/workflow.md`](references/workflow.md): Review for Standards and Spec, Deep review for Architecture & DDD, and an economical publication profile for Gitkeeper.
 2. Pin the declared base and target, preferably with the bundled evidence collector, and capture the complete diff, commit messages, standards candidates, specification candidates, and current checks.
-3. Gather repository standards and the strongest available specification. Fall back to the PR description and complete commit messages when no external issue or user-supplied specification resolves.
-4. Gather repository architecture and domain context when it exists; absence never removes the Architecture & DDD axis.
-5. Compile the fixed three-reviewer panel and start Standards, Spec, and Architecture & DDD in one fan-out over the complete diff.
-6. Enforce [`schemas/reviewer-result.schema.json`](schemas/reviewer-result.schema.json) at invocation time, require exactly one valid result from each axis, then aggregate without losing finding provenance.
-7. Publish through the Gitkeeper only when the user explicitly authorized an external change.
+3. Gather repository standards, the strongest available specification, and architecture/domain context concurrently. Fall back to the PR description and complete commit messages when no external specification resolves; missing architecture context never removes that axis.
+4. Compile the fixed three-reviewer panel and start Standards, Spec, and Architecture & DDD in one fan-out over the complete diff.
+5. Enforce [`schemas/reviewer-result.schema.json`](schemas/reviewer-result.schema.json) at invocation time, require exactly one valid result from each axis, then aggregate without losing finding provenance.
+6. Publish through the Gitkeeper only when the user explicitly authorized an external change.
 
 Follow the complete fixed-panel procedure in [`references/workflow.md`](references/workflow.md).
 Use [`references/reporting.md`](references/reporting.md) for deterministic verdict, merge status, merge readiness, and the developer report.

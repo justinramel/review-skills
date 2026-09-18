@@ -312,19 +312,20 @@ const collectGithubStandards = async ({
   const candidates = (tree.tree ?? []).filter(
     (entry) => entry.type === 'blob' && isStandardPath(entry.path)
   )
-  const standards = []
+  const standards = await Promise.all(
+    candidates.map(async (entry) => {
+      const blob = await request(
+        `/repos/${owner}/${repository}/git/blobs/${entry.sha}`
+      )
 
-  for (const entry of candidates) {
-    const blob = await request(
-      `/repos/${owner}/${repository}/git/blobs/${entry.sha}`
-    )
-    standards.push({
-      path: entry.path,
-      revision: headSha,
-      immutableUrl: `https://github.com/${owner}/${repository}/blob/${headSha}/${encodePath(entry.path)}`,
-      content: decodeBlob(blob)
+      return {
+        path: entry.path,
+        revision: headSha,
+        immutableUrl: `https://github.com/${owner}/${repository}/blob/${headSha}/${encodePath(entry.path)}`,
+        content: decodeBlob(blob)
+      }
     })
-  }
+  )
 
   return {
     standards,
@@ -355,13 +356,13 @@ const collectGithubChecks = async ({
   request
 }) => {
   try {
-    const checkRuns = await githubCheckRunPages(
-      `/repos/${owner}/${repository}/commits/${headSha}/check-runs`,
-      request
-    )
-    const statusResponse = await request(
-      `/repos/${owner}/${repository}/commits/${headSha}/status`
-    )
+    const [checkRuns, statusResponse] = await Promise.all([
+      githubCheckRunPages(
+        `/repos/${owner}/${repository}/commits/${headSha}/check-runs`,
+        request
+      ),
+      request(`/repos/${owner}/${repository}/commits/${headSha}/status`)
+    ])
     const runs = [
       ...checkRuns.map((run) => ({
         name: run.name,
@@ -388,6 +389,30 @@ const collectGithubChecks = async ({
   }
 }
 
+const collectGithubChecksUntilSettled = async ({
+  owner,
+  repository,
+  headSha,
+  waitForChecksSeconds,
+  request,
+  pause
+}) => {
+  const deadline = Date.now() + Number(waitForChecksSeconds) * 1000
+  let checks
+
+  do {
+    checks = await collectGithubChecks({
+      owner,
+      repository,
+      headSha,
+      request
+    })
+
+    if (checks.state !== 'pending' || Date.now() >= deadline) return checks
+    await pause(Math.min(5000, Math.max(1, deadline - Date.now())))
+  } while (true)
+}
+
 export const collectGithubEvidence = async ({
   pullRequest,
   waitForChecksSeconds = 0,
@@ -396,14 +421,13 @@ export const collectGithubEvidence = async ({
 }) => {
   const parsed = parsePullRequest(pullRequest)
   const baseResource = `/repos/${parsed.owner}/${parsed.repository}`
-  const pull = await request(`${baseResource}/pulls/${parsed.number}`)
-  const commits = await githubPages(
-    `${baseResource}/pulls/${parsed.number}/commits`,
-    request
-  )
-  const diff = await request(`${baseResource}/pulls/${parsed.number}`, {
-    accept: 'application/vnd.github.v3.diff'
-  })
+  const [pull, commits, diff] = await Promise.all([
+    request(`${baseResource}/pulls/${parsed.number}`),
+    githubPages(`${baseResource}/pulls/${parsed.number}/commits`, request),
+    request(`${baseResource}/pulls/${parsed.number}`, {
+      accept: 'application/vnd.github.v3.diff'
+    })
+  ])
   const headSha = pull.head.sha
   const files = parseDiff(diff, {
     owner: parsed.owner,
@@ -423,26 +447,22 @@ export const collectGithubEvidence = async ({
       `GitHub commit list is incomplete: expected ${pull.commits}, received ${commits.length}`
     )
   }
-  const standardsResult = await collectGithubStandards({
-    owner: parsed.owner,
-    repository: parsed.repository,
-    headSha,
-    request
-  })
-  const deadline = Date.now() + Number(waitForChecksSeconds) * 1000
-  let checks
-
-  do {
-    checks = await collectGithubChecks({
+  const [standardsResult, checks] = await Promise.all([
+    collectGithubStandards({
       owner: parsed.owner,
       repository: parsed.repository,
       headSha,
       request
+    }),
+    collectGithubChecksUntilSettled({
+      owner: parsed.owner,
+      repository: parsed.repository,
+      headSha,
+      waitForChecksSeconds,
+      request,
+      pause
     })
-
-    if (checks.state !== 'pending' || Date.now() >= deadline) break
-    await pause(Math.min(5000, Math.max(1, deadline - Date.now())))
-  } while (true)
+  ])
 
   const commitMessages = commits.map((entry) => entry.commit.message)
 
